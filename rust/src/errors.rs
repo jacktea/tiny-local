@@ -10,6 +10,8 @@ pub enum CompressorError {
     EncodeError(String),
     #[error("WebP feature not enabled")]
     WebpNotEnabled,
+    #[error("EXIF error: {0}")]
+    ExifError(String),
 }
 
 impl From<image::ImageError> for CompressorError {

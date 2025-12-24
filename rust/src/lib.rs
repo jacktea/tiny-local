@@ -1,6 +1,7 @@
 use wasm_bindgen::prelude::*;
 
 mod errors;
+mod exif;
 mod jpeg;
 mod png;
 mod utils;
@@ -26,6 +27,9 @@ struct CompressOptions {
     // 尺寸调整选项
     resize_mode: Option<String>, // "none", "percentage", "maxWidth", "maxHeight", "fixed"
     resize_value: Option<u32>,   // 百分比值或像素值
+    // EXIF处理选项
+    auto_rotate: Option<bool>,    // 自动旋转（根据EXIF方向）
+    strip_exif: Option<bool>,     // 清除EXIF元数据
 }
 
 #[wasm_bindgen]
@@ -44,6 +48,8 @@ pub fn compress_image(
 
     let resize_mode = opts.resize_mode.as_deref().unwrap_or("none");
     let resize_value = opts.resize_value.unwrap_or(100);
+    let auto_rotate = opts.auto_rotate.unwrap_or(true);
+    let strip_exif = opts.strip_exif.unwrap_or(true);
 
     match format {
         InputFormat::Png => png::compress_png(
@@ -52,6 +58,7 @@ pub fn compress_image(
             opts.dithering.unwrap_or(true),
             resize_mode,
             resize_value,
+            auto_rotate,
         )
         .map_err(map_err),
         InputFormat::Jpeg => jpeg::compress_jpeg(
@@ -60,6 +67,8 @@ pub fn compress_image(
             opts.progressive.unwrap_or(true),
             resize_mode,
             resize_value,
+            auto_rotate,
+            strip_exif,
         )
         .map_err(map_err),
         InputFormat::Webp => {

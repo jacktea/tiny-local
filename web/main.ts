@@ -21,6 +21,7 @@ type WorkerMessage =
   | { type: 'completed'; id: string; output: Uint8Array; outputFormat: string; quality?: number }
   | { type: 'error'; id: string; message: string }
   | { type: 'aborted' }
+  | { type: 'skipped'; id: string }
 
 interface OutputItem {
   data: Uint8Array
@@ -100,6 +101,13 @@ worker.onmessage = (event: MessageEvent<WorkerMessage>) => {
     item.error = message.message
     updateRow(item)
     updateStats()
+    return
+  }
+
+  if (message.type === 'skipped') {
+    // item状态已经是skipped，只需要更新统计
+    updateStats()
+    return
   }
 }
 
@@ -124,6 +132,12 @@ function updateRow(item: ItemState) {
   if (preview) {
     preview.onclick = () => openPreview(item.id)
   }
+  const skip = row.querySelector(
+    '[data-action="skip"]'
+  ) as HTMLButtonElement | null
+  if (skip) {
+    skip.onclick = () => skipItem(item.id)
+  }
   renderRow(row, item)
 }
 
@@ -137,6 +151,21 @@ function removeItem(id: string) {
   state.outputs.delete(id)
   state.originals.delete(id)
   updateStats()
+}
+
+function skipItem(id: string) {
+  const item = state.items.get(id)
+  if (!item) return
+
+  // 只有排队中的文件才能跳过
+  if (item.status !== 'queued') return
+
+  item.status = 'skipped'
+  updateRow(item)
+  updateStats()
+
+  // 通知worker跳过该文件
+  worker.postMessage({ type: 'skip', id })
 }
 
 function updateStats() {
@@ -193,6 +222,12 @@ async function enqueueFiles(fileList: FileList | File[]) {
       ? 75 // 初始质量，后续会通过二分查找调整
       : Number(elements.qualityInput.value)
 
+    // 检查是否跳过（在最后确认状态，因为可能在创建后被标记为skipped）
+    const currentItem = state.items.get(id)
+    if (currentItem && currentItem.status === 'skipped') {
+      continue // 跳过已标记为skipped的项目
+    }
+
     worker.postMessage(
       {
         type: 'enqueue',
@@ -205,6 +240,8 @@ async function enqueueFiles(fileList: FileList | File[]) {
             dithering: elements.ditherInput.checked,
             progressive: elements.progressiveInput.checked,
             convertToWebp: elements.convertWebpInput.checked,
+            autoRotate: elements.autoRotateInput.checked,
+            stripExif: elements.stripExifInput.checked,
             targetSize: currentCompressionMode === 'targetSize' ? getTargetSizeBytes() : undefined,
             resizeMode: elements.resizeEnabled.checked ? elements.resizeMode.value : undefined,
             resizeValue: elements.resizeEnabled.checked ? parseInt(elements.resizeValue.value) : undefined,
@@ -331,6 +368,8 @@ async function reprocessCompletedFiles() {
             dithering: elements.ditherInput.checked,
             progressive: elements.progressiveInput.checked,
             convertToWebp: elements.convertWebpInput.checked,
+            autoRotate: elements.autoRotateInput.checked,
+            stripExif: elements.stripExifInput.checked,
             resizeMode: elements.resizeEnabled.checked ? elements.resizeMode.value : undefined,
             resizeValue: elements.resizeEnabled.checked ? parseInt(elements.resizeValue.value) : undefined,
           },
@@ -351,6 +390,8 @@ interface PresetConfig {
   dithering: boolean
   progressive: boolean
   convertToWebp: boolean
+  autoRotate: boolean
+  stripExif: boolean
   getDescription: () => string
 }
 
@@ -360,6 +401,8 @@ const presets: Record<PresetMode, PresetConfig> = {
     dithering: true,
     progressive: true,
     convertToWebp: false,
+    autoRotate: true,
+    stripExif: true,
     getDescription: () => '',
   },
   social: {
@@ -367,6 +410,8 @@ const presets: Record<PresetMode, PresetConfig> = {
     dithering: true,
     progressive: true,
     convertToWebp: false,
+    autoRotate: true,
+    stripExif: true,
     getDescription: () => {
       const tr = t()
       const isZh = getLanguage() === 'zh'
@@ -378,6 +423,8 @@ const presets: Record<PresetMode, PresetConfig> = {
     dithering: true,
     progressive: true,
     convertToWebp: true,
+    autoRotate: true,
+    stripExif: true,
     getDescription: () => {
       const tr = t()
       const isZh = getLanguage() === 'zh'
@@ -389,6 +436,8 @@ const presets: Record<PresetMode, PresetConfig> = {
     dithering: false,
     progressive: false,
     convertToWebp: false,
+    autoRotate: true,
+    stripExif: true,
     getDescription: () => {
       const tr = t()
       const isZh = getLanguage() === 'zh'
@@ -431,6 +480,8 @@ function setupPresets() {
       elements.ditherInput.checked = config.dithering
       elements.progressiveInput.checked = config.progressive
       elements.convertWebpInput.checked = config.convertToWebp
+      elements.autoRotateInput.checked = config.autoRotate
+      elements.stripExifInput.checked = config.stripExif
     }
 
     // 如果有已完成的文件，提示是否重新处理
@@ -634,6 +685,8 @@ function setupControls() {
   elements.ditherInput.addEventListener('change', handleOptionChange)
   elements.progressiveInput.addEventListener('change', handleOptionChange)
   elements.convertWebpInput.addEventListener('change', handleOptionChange)
+  elements.autoRotateInput.addEventListener('change', handleOptionChange)
+  elements.stripExifInput.addEventListener('change', handleOptionChange)
   // quality 滑块在拖动时也会触发，所以只在值改变时提示
   let qualityTimeout: number | null = null
   elements.qualityInput.addEventListener('input', () => {

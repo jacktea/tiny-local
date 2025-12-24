@@ -22,6 +22,7 @@ image = { version = "0.24.9", default-features = false, features = ["png", "jpeg
 png = "0.17"
 imagequant = "4.2"
 webp = { version = "0.2", optional = true }
+kamadak-exif = "0.5"
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 mozjpeg = "0.10"
