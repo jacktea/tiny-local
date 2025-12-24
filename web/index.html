@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title data-i18n="title">TinyLocal</title>
+    <meta
+      name="description"
+      data-i18n="description"
+      content="Client-side image compression in your browser. No uploads, no tracking."
+    />
+    <meta name="theme-color" content="#0a0f1f" />
+    <link rel="manifest" href="./manifest.json" />
+  </head>
+  <body>
+    <div class="page">
+      <header class="hero">
+        <div class="hero-copy">
+          <p class="tag" data-i18n="tag">
+            Privacy-First · Offline Ready · WASM
+          </p>
+          <h1 data-i18n="heroTitle">TinyLocal</h1>
+          <p class="lede" data-i18n="heroDescription">
+            TinyPNG-class compression, entirely in your browser. Drop PNG, JPEG,
+            or WebP images and keep everything local.
+          </p>
+        </div>
+        <div class="hero-side">
+          <button id="langToggle" class="ghost lang-toggle">中/EN</button>
+          <div class="hero-card">
+            <div class="stat">
+              <span data-i18n="engine">Engine</span>
+              <strong id="engineVersion">Loading...</strong>
+            </div>
+            <div class="stat">
+              <span data-i18n="privacy">Privacy</span>
+              <strong data-i18n="noUploads">No uploads</strong>
+            </div>
+            <div class="stat">
+              <span data-i18n="status">Status</span>
+              <strong id="status">Idle</strong>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <section class="controls">
+        <div class="dropzone" data-dropzone>
+          <input
+            id="fileInput"
+            type="file"
+            accept="image/png,image/jpeg,image/webp"
+            multiple
+          />
+          <div>
+            <h2 data-i18n="dropFilesTitle">Drop files to compress</h2>
+            <p data-i18n="dropFilesSubtitle">or click to select images</p>
+          </div>
+        </div>
+
+        <div class="control-panel">
+          <div class="slider">
+            <label for="qualityInput" data-i18n="quality">Quality</label>
+            <div class="slider-row">
+              <input
+                id="qualityInput"
+                type="range"
+                min="40"
+                max="100"
+                value="75"
+              />
+              <span id="qualityValue">75</span>
+            </div>
+          </div>
+
+          <div class="toggle-grid">
+            <label class="toggle">
+              <input id="ditherInput" type="checkbox" checked />
+              <span data-i18n="ditherPNGs">Dither PNGs</span>
+            </label>
+            <label class="toggle">
+              <input id="progressiveInput" type="checkbox" checked />
+              <span data-i18n="progressiveJPEG">Progressive JPEG</span>
+            </label>
+            <label class="toggle">
+              <input id="convertWebpInput" type="checkbox" />
+              <span data-i18n="convertPNGToWebP">Convert PNG to WebP</span>
+            </label>
+          </div>
+
+          <div class="actions">
+            <button
+              id="downloadAll"
+              class="primary"
+              disabled
+              data-i18n="downloadAll"
+            >
+              Download all
+            </button>
+            <button id="cancel" class="ghost" disabled data-i18n="cancel">
+              Cancel
+            </button>
+          </div>
+          <p class="privacy" data-i18n="privacyNote">
+            Your images never leave this device. No analytics or tracking.
+          </p>
+        </div>
+      </section>
+
+      <section class="queue">
+        <div class="queue-header">
+          <h3 data-i18n="compressionQueue">Compression queue</h3>
+          <p id="stats" data-i18n="noFilesYet">No files yet.</p>
+        </div>
+        <div id="fileList" class="file-list"></div>
+      </section>
+
+      <footer class="footer">
+        <p data-i18n="footer">
+          Built with Rust + WebAssembly. Ready for static hosting and offline
+          use.
+        </p>
+      </footer>
+    </div>
+
+    <script type="module" src="./main.ts"></script>
+  </body>
+</html>

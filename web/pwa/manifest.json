@@ -1,0 +1,17 @@
+{
+  "name": "TinyLocal",
+  "short_name": "TinyLocal",
+  "description": "Privacy-first, offline-ready image compression in your browser.",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#f2f3f7",
+  "theme_color": "#0a0f1f",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

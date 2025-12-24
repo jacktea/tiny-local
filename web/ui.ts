@@ -1,0 +1,128 @@
+import { t } from './i18n'
+
+export type ItemStatus = 'queued' | 'processing' | 'done' | 'error' | 'aborted';
+
+export interface ItemState {
+  id: string;
+  name: string;
+  originalSize: number;
+  status: ItemStatus;
+  outputSize?: number;
+  outputFormat?: string;
+  error?: string;
+}
+
+export const elements = {
+  dropzone: document.querySelector('[data-dropzone]') as HTMLElement,
+  fileInput: document.querySelector('#fileInput') as HTMLInputElement,
+  qualityInput: document.querySelector('#qualityInput') as HTMLInputElement,
+  qualityValue: document.querySelector('#qualityValue') as HTMLElement,
+  ditherInput: document.querySelector('#ditherInput') as HTMLInputElement,
+  progressiveInput: document.querySelector('#progressiveInput') as HTMLInputElement,
+  convertWebpInput: document.querySelector('#convertWebpInput') as HTMLInputElement,
+  downloadAll: document.querySelector('#downloadAll') as HTMLButtonElement,
+  cancel: document.querySelector('#cancel') as HTMLButtonElement,
+  list: document.querySelector('#fileList') as HTMLElement,
+  stats: document.querySelector('#stats') as HTMLElement,
+  status: document.querySelector('#status') as HTMLElement,
+  engineVersion: document.querySelector('#engineVersion') as HTMLElement,
+};
+
+export function createRow(item: ItemState): HTMLDivElement {
+  const row = document.createElement('div');
+  row.className = 'file-row';
+  row.dataset.id = item.id;
+
+  const name = document.createElement('div');
+  name.className = 'file-name';
+  name.textContent = item.name;
+
+  const sizes = document.createElement('div');
+  sizes.className = 'file-meta file-sizes';
+
+  const reduction = document.createElement('div');
+  reduction.className = 'file-meta file-reduction';
+
+  const status = document.createElement('div');
+  status.className = 'file-status';
+
+  const actions = document.createElement('div');
+  actions.className = 'row-actions';
+
+  const download = document.createElement('button');
+  download.className = 'ghost';
+  download.dataset.action = 'download';
+  download.textContent = t().download;
+  download.disabled = true;
+
+  const remove = document.createElement('button');
+  remove.className = 'ghost danger';
+  remove.dataset.action = 'delete';
+  remove.textContent = t().delete;
+
+  actions.append(download, remove);
+
+  row.append(name, sizes, reduction, status, actions);
+  updateRow(row, item);
+  return row;
+}
+
+export function updateRow(row: HTMLElement, item: ItemState) {
+  const name = row.querySelector('.file-name') as HTMLElement | null;
+  const sizes = row.querySelector('.file-sizes') as HTMLElement | null;
+  const reduction = row.querySelector('.file-reduction') as HTMLElement | null;
+  const status = row.querySelector('.file-status') as HTMLElement | null;
+  const download = row.querySelector('[data-action="download"]') as HTMLButtonElement | null;
+  const remove = row.querySelector('[data-action="delete"]') as HTMLButtonElement | null;
+  const tr = t();
+
+  if (name) name.textContent = item.name;
+  if (sizes)
+    sizes.textContent = item.outputSize
+    ? `${formatBytes(item.originalSize)} → ${formatBytes(item.outputSize)}`
+    : `${formatBytes(item.originalSize)} ${tr.original}`;
+
+  if (reduction) {
+    if (item.outputSize) {
+      reduction.textContent = `${formatPercent(item.originalSize, item.outputSize)} ${tr.saved}`;
+    } else if (item.error) {
+      reduction.textContent = item.error;
+    } else {
+      reduction.textContent = tr.waiting;
+    }
+  }
+
+  // 状态文本映射
+  const statusMap: Record<ItemStatus, string> = {
+    queued: tr.queued,
+    processing: tr.processing,
+    done: tr.done,
+    error: tr.error,
+    aborted: tr.abortedStatus,
+  };
+  if (status) {
+    status.textContent = statusMap[item.status] || item.status.toUpperCase();
+    status.className = `file-status ${item.status}`;
+  }
+
+  if (download) {
+    download.disabled = item.status !== 'done';
+    download.textContent = tr.download;
+  }
+  if (remove) {
+    remove.textContent = tr.delete;
+  }
+}
+
+export function formatBytes(value: number): string {
+  if (value < 1024) return `${value} B`;
+  const kb = value / 1024;
+  if (kb < 1024) return `${kb.toFixed(1)} KB`;
+  return `${(kb / 1024).toFixed(2)} MB`;
+}
+
+export function formatPercent(original: number, output: number): string {
+  if (original === 0) return '0%';
+  const diff = ((original - output) / original) * 100;
+  return `${diff.toFixed(1)}%`;
+}
