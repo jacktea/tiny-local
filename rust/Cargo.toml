@@ -1,0 +1,30 @@
+[package]
+name = "tinylocal"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+
+[lib]
+crate-type = ["cdylib"]
+
+[features]
+default = []
+webp = ["dep:webp", "image/webp"]
+
+[dependencies]
+wasm-bindgen = "0.2.92"
+serde = { version = "1.0", features = ["derive"] }
+serde-wasm-bindgen = "0.6"
+wee_alloc = "0.4"
+console_error_panic_hook = "0.1"
+thiserror = "1.0"
+image = { version = "0.24.9", default-features = false, features = ["png", "jpeg"] }
+png = "0.17"
+imagequant = "4.2"
+webp = { version = "0.2", optional = true }
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+mozjpeg = "0.10"
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+jpeg-encoder = "0.6"

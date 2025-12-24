@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#ffe0b3" />
+      <stop offset="100%" stop-color="#ff7a59" />
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0a0f1f" />
+      <stop offset="100%" stop-color="#1b5cff" />
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="120" fill="url(#bg)" />
+  <rect x="96" y="120" width="320" height="256" rx="48" fill="#ffffff" opacity="0.96" />
+  <rect x="132" y="168" width="160" height="120" rx="16" fill="url(#accent)" opacity="0.9" />
+  <circle cx="176" cy="198" r="18" fill="#ffffff" />
+  <path d="M148 272l48-56 38 44 28-30 52 62H148z" fill="#ffffff" opacity="0.9" />
+  <rect x="308" y="168" width="72" height="120" rx="12" fill="#ff7a59" opacity="0.85" />
+  <path d="M344 190l-12 12h9v40h6v-40h9l-12-12z" fill="#ffffff" />
+  <path d="M332 250h24l-12 12-12-12z" fill="#ffffff" />
+  <rect x="126" y="324" width="260" height="24" rx="12" fill="#0a0f1f" opacity="0.12" />
+  <rect x="126" y="324" width="180" height="24" rx="12" fill="#1b5cff" opacity="0.8" />
+</svg>
