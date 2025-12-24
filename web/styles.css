@@ -1,5 +1,5 @@
 :root {
-  color-scheme: light;
+  color-scheme: light dark;
   --bg: #f2f3f7;
   --bg-accent: #d8e1ff;
   --card: #ffffff;
@@ -12,6 +12,36 @@
   --shadow: 0 20px 60px rgba(10, 15, 31, 0.14);
   --radius: 18px;
   font-family: "Space Grotesk", "Fira Sans", "Avenir Next", sans-serif;
+}
+
+/* 深色模式 - 手动切换 */
+:root[data-theme="dark"] {
+  --bg: #0d1117;
+  --bg-accent: #1c2128;
+  --card: #161b22;
+  --ink: #e6edf3;
+  --muted: #8b949e;
+  --accent: #4f93ff;
+  --accent-soft: #1f3d66;
+  --success: #2ea043;
+  --danger: #f85149;
+  --shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+}
+
+/* 深色模式 - 系统偏好 */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0d1117;
+    --bg-accent: #1c2128;
+    --card: #161b22;
+    --ink: #e6edf3;
+    --muted: #8b949e;
+    --accent: #4f93ff;
+    --accent-soft: #1f3d66;
+    --success: #2ea043;
+    --danger: #f85149;
+    --shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+  }
 }
 
 * {
@@ -53,6 +83,11 @@ body {
   flex-direction: column;
   align-items: flex-end;
   gap: 12px;
+}
+
+.hero-actions {
+  display: flex;
+  gap: 8px;
 }
 
 .tag {
@@ -131,6 +166,54 @@ h1 {
   gap: 20px;
 }
 
+/* 预设模式 */
+.preset-container {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.preset-container label {
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.preset-buttons {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+
+.preset-btn {
+  padding: 10px 8px;
+  border: 1px solid rgba(10, 15, 31, 0.15);
+  background: var(--bg);
+  border-radius: 10px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-align: center;
+}
+
+.preset-btn:hover {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.preset-btn.active {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: #fff;
+}
+
+.preset-description {
+  font-size: 0.8rem;
+  color: var(--muted);
+  margin: 0;
+  min-height: 1.2em;
+}
+
 .slider label {
   font-weight: 600;
 }
@@ -189,9 +272,38 @@ button.ghost.danger {
   color: var(--danger);
 }
 
-.lang-toggle {
-  align-self: flex-end;
+.lang-toggle,
+.theme-toggle {
+  padding: 8px 12px;
+  min-width: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
+
+.theme-icon-dark {
+  display: none;
+}
+
+/* 深色模式下显示月亮图标 */
+:root[data-theme="dark"] .theme-icon-dark {
+  display: inline;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .theme-icon-dark {
+    display: inline;
+  }
+}
+
+:root[data-theme="dark"] .theme-icon-light {
+  display: none;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .theme-icon-light {
+    display: none;
+  }
+}
+
 
 button:disabled {
   opacity: 0.5;
@@ -280,6 +392,10 @@ button:disabled {
     grid-template-columns: 1fr;
   }
 
+  .preset-buttons {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
   .file-row {
     grid-template-columns: 1fr;
   }
@@ -292,7 +408,12 @@ button:disabled {
     align-items: flex-start;
   }
 
-  .lang-toggle {
+  .hero-actions {
+    align-self: flex-start;
+  }
+
+  .lang-toggle,
+  .theme-toggle {
     align-self: flex-start;
   }
 }

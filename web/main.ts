@@ -333,6 +333,123 @@ async function reprocessCompletedFiles() {
   updateStats()
 }
 
+// 预设模式
+type PresetMode = 'custom' | 'social' | 'web' | 'archive'
+
+interface PresetConfig {
+  quality: number
+  dithering: boolean
+  progressive: boolean
+  convertToWebp: boolean
+  getDescription: () => string
+}
+
+const presets: Record<PresetMode, PresetConfig> = {
+  custom: {
+    quality: 75,
+    dithering: true,
+    progressive: true,
+    convertToWebp: false,
+    getDescription: () => '',
+  },
+  social: {
+    quality: 82,
+    dithering: true,
+    progressive: true,
+    convertToWebp: false,
+    getDescription: () => {
+      const tr = t()
+      const isZh = getLanguage() === 'zh'
+      return tr.presetSocial + ' · ' + (isZh ? '高质量 82' : 'High quality 82')
+    },
+  },
+  web: {
+    quality: 70,
+    dithering: true,
+    progressive: true,
+    convertToWebp: true,
+    getDescription: () => {
+      const tr = t()
+      const isZh = getLanguage() === 'zh'
+      return tr.presetWeb + ' · ' + (isZh ? '平衡质量与大小 70' : 'Balanced 70')
+    },
+  },
+  archive: {
+    quality: 55,
+    dithering: false,
+    progressive: false,
+    convertToWebp: false,
+    getDescription: () => {
+      const tr = t()
+      const isZh = getLanguage() === 'zh'
+      return tr.presetArchive + ' · ' + (isZh ? '最小文件大小 55' : 'Smallest size 55')
+    },
+  },
+}
+
+let currentPreset: PresetMode = 'custom'
+
+function setupPresets() {
+  const presetButtons = document.querySelectorAll('.preset-btn')
+  const presetDescription = document.getElementById('presetDescription') as HTMLElement | null
+
+  const applyPreset = (preset: PresetMode) => {
+    currentPreset = preset
+    const config = presets[preset]
+
+    // 更新UI
+    presetButtons.forEach((btn) => {
+      if (btn instanceof HTMLElement && btn.dataset.preset === preset) {
+        btn.classList.add('active')
+      } else {
+        btn.classList.remove('active')
+      }
+    })
+
+    // 更新描述
+    const description = config.getDescription()
+    if (presetDescription && description) {
+      presetDescription.textContent = description
+    } else if (presetDescription) {
+      presetDescription.textContent = ''
+    }
+
+    // 应用预设值（custom 模式不修改）
+    if (preset !== 'custom') {
+      elements.qualityInput.value = config.quality.toString()
+      elements.qualityValue.textContent = config.quality.toString()
+      elements.ditherInput.checked = config.dithering
+      elements.progressiveInput.checked = config.progressive
+      elements.convertWebpInput.checked = config.convertToWebp
+    }
+
+    // 如果有已完成的文件，提示是否重新处理
+    const hasCompleted = Array.from(state.items.values()).some(
+      (item) => item.status === 'done'
+    )
+    if (hasCompleted && preset !== 'custom') {
+      const completedCount = Array.from(state.items.values()).filter(
+        (item) => item.status === 'done'
+      ).length
+      if (completedCount > 0 && confirm(t().reprocessConfirm(completedCount))) {
+        void reprocessCompletedFiles()
+      }
+    }
+  }
+
+  // 绑定预设按钮事件
+  presetButtons.forEach((btn) => {
+    if (btn instanceof HTMLElement && btn.dataset.preset) {
+      btn.addEventListener('click', () => {
+        const preset = btn.dataset.preset as PresetMode
+        if (preset in presets) {
+          applyPreset(preset)
+        }
+      })
+    }
+  })
+}
+
 function setupControls() {
   elements.qualityValue.textContent = elements.qualityInput.value
   elements.qualityInput.addEventListener('input', () => {
@@ -341,6 +458,25 @@ function setupControls() {
 
   // 当选项改变时，如果有已完成的文件，可以重新处理
   const handleOptionChange = () => {
+    // 手动修改选项时，切换到 custom 模式
+    if (currentPreset !== 'custom') {
+      currentPreset = 'custom'
+      const presetButtons = document.querySelectorAll('.preset-btn')
+      presetButtons.forEach((btn) => {
+        if (btn instanceof HTMLElement) {
+          if (btn.dataset.preset === 'custom') {
+            btn.classList.add('active')
+          } else {
+            btn.classList.remove('active')
+          }
+        }
+      })
+      const presetDescription = document.getElementById('presetDescription') as HTMLElement | null
+      if (presetDescription) {
+        presetDescription.textContent = ''
+      }
+    }
+
     const hasCompleted = Array.from(state.items.values()).some(
       (item) => item.status === 'done'
     )
@@ -691,6 +827,13 @@ function setupI18n() {
 
     // 更新统计信息
     updateStats()
+
+    // 更新预设模式描述
+    const presetDescription = document.getElementById('presetDescription') as HTMLElement | null
+    if (presetDescription && currentPreset !== 'custom') {
+      const config = presets[currentPreset]
+      presetDescription.textContent = config.getDescription()
+    }
   }
 
   // 初始更新
@@ -712,11 +855,91 @@ function setupI18n() {
   }
 }
 
+// 主题管理
+type Theme = 'light' | 'dark' | 'auto'
+
+function getStoredTheme(): Theme {
+  const stored = localStorage.getItem('theme')
+  if (stored === 'light' || stored === 'dark' || stored === 'auto') {
+    return stored
+  }
+  return 'auto'
+}
+
+function setStoredTheme(theme: Theme) {
+  localStorage.setItem('theme', theme)
+}
+
+function getEffectiveTheme(): 'light' | 'dark' {
+  const stored = getStoredTheme()
+  if (stored !== 'auto') {
+    return stored
+  }
+  // 检测系统偏好
+  if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+    return 'dark'
+  }
+  return 'light'
+}
+
+function applyTheme(theme: Theme) {
+  const root = document.documentElement
+  root.removeAttribute('data-theme')
+
+  if (theme === 'light') {
+    root.setAttribute('data-theme', 'light')
+  } else if (theme === 'dark') {
+    root.setAttribute('data-theme', 'dark')
+  }
+  // auto 模式下不设置 data-theme，由 CSS media query 处理
+}
+
+function setupTheme() {
+  const themeToggle = document.querySelector('#themeToggle') as HTMLButtonElement | null
+  if (!themeToggle) return
+
+  // 初始化主题
+  const storedTheme = getStoredTheme()
+  applyTheme(storedTheme)
+
+  // 主题切换逻辑
+  themeToggle.addEventListener('click', () => {
+    const currentTheme = getStoredTheme()
+    const effectiveTheme = getEffectiveTheme()
+
+    // 切换顺序: auto -> light -> dark -> auto (基于当前有效主题)
+    let newTheme: Theme
+    if (currentTheme === 'auto') {
+      // 当前是自动模式，切换到与当前有效主题相反的模式
+      newTheme = effectiveTheme === 'dark' ? 'light' : 'dark'
+    } else {
+      // 当前是固定模式，切换回自动
+      newTheme = 'auto'
+    }
+
+    setStoredTheme(newTheme)
+    applyTheme(newTheme)
+  })
+
+  // 监听系统主题变化
+  if (window.matchMedia) {
+    const darkModeQuery = window.matchMedia('(prefers-color-scheme: dark)')
+    darkModeQuery.addEventListener('change', () => {
+      // 只有在 auto 模式下才响应系统变化
+      if (getStoredTheme() === 'auto') {
+        applyTheme('auto')
+      }
+    })
+  }
+}
+
 setupDragAndDrop()
+setupPresets()
 setupControls()
 setupServiceWorker()
 setupI18n()
 setupPreviewSlider()
+setupTheme()
 updateStats()
 
 worker.postMessage({ type: 'ping' })

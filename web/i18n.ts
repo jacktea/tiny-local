@@ -27,6 +27,11 @@ interface Translations {
   dropFilesSubtitle: string
 
   // Controls
+  presetMode: string
+  presetCustom: string
+  presetSocial: string
+  presetWeb: string
+  presetArchive: string
   quality: string
   ditherPNGs: string
   progressiveJPEG: string
@@ -93,6 +98,11 @@ const translations: Record<Language, Translations> = {
     aborted: 'Aborted',
     dropFilesTitle: 'Drop files to compress',
     dropFilesSubtitle: 'or click to select images',
+    presetMode: 'Preset Mode',
+    presetCustom: 'Custom',
+    presetSocial: 'Social',
+    presetWeb: 'Web',
+    presetArchive: 'Archive',
     quality: 'Quality',
     ditherPNGs: 'Dither PNGs',
     progressiveJPEG: 'Progressive JPEG',
@@ -146,6 +156,11 @@ const translations: Record<Language, Translations> = {
     aborted: '已取消',
     dropFilesTitle: '拖放文件进行压缩',
     dropFilesSubtitle: '或点击选择图片',
+    presetMode: '预设模式',
+    presetCustom: '自定义',
+    presetSocial: '社交分享',
+    presetWeb: 'Web 发布',
+    presetArchive: '长期存档',
     quality: '质量',
     ditherPNGs: 'PNG 抖动',
     progressiveJPEG: '渐进式 JPEG',

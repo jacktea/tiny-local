@@ -36,7 +36,13 @@
           </p>
         </div>
         <div class="hero-side">
-          <button id="langToggle" class="ghost lang-toggle">中/EN</button>
+          <div class="hero-actions">
+            <button id="themeToggle" class="ghost theme-toggle" aria-label="Toggle theme">
+              <span class="theme-icon-light">☀️</span>
+              <span class="theme-icon-dark">🌙</span>
+            </button>
+            <button id="langToggle" class="ghost lang-toggle">中/EN</button>
+          </div>
           <div class="hero-card">
             <div class="stat">
               <span data-i18n="engine">Engine</span>
@@ -69,6 +75,18 @@
         </div>
 
         <div class="control-panel">
+          <!-- 预设模式 -->
+          <div class="preset-container">
+            <label data-i18n="presetMode">Preset Mode</label>
+            <div class="preset-buttons">
+              <button type="button" class="preset-btn active" data-preset="custom" data-i18n="presetCustom">Custom</button>
+              <button type="button" class="preset-btn" data-preset="social" data-i18n="presetSocial">Social</button>
+              <button type="button" class="preset-btn" data-preset="web" data-i18n="presetWeb">Web</button>
+              <button type="button" class="preset-btn" data-preset="archive" data-i18n="presetArchive">Archive</button>
+            </div>
+            <p class="preset-description" id="presetDescription"></p>
+          </div>
+
           <div class="slider">
             <label for="qualityInput" data-i18n="quality">Quality</label>
             <div class="slider-row">
