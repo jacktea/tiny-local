@@ -2,6 +2,10 @@
 
 TinyLocal 是一个生产就绪、隐私优先的图片压缩工具，完全在浏览器中运行。使用 Rust + WebAssembly、Vite 构建，并使用专用的 Web Worker 确保 UI 不阻塞。
 
+## 在线预览
+
+🌐 [https://tinylocal.851621.xyz/](https://tinylocal.851621.xyz/)
+
 ## 功能特性
 
 - 客户端 PNG、JPEG 和 WebP 压缩
