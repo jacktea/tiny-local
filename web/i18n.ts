@@ -63,6 +63,14 @@ interface Translations {
   // Messages
   optionsChanged: string
   reprocessConfirm: (count: number) => string
+
+  // Preview
+  preview: string
+  previewModalTitle: string
+  originalImage: string
+  compressedImage: string
+  close: string
+  previewNotAvailable: string
 }
 
 const translations: Record<Language, Translations> = {
@@ -112,6 +120,12 @@ const translations: Record<Language, Translations> = {
     optionsChanged: 'Options changed.',
     reprocessConfirm: (count) =>
       `Options changed. Do you want to reprocess ${count} completed file${count > 1 ? 's' : ''}?`,
+    preview: 'Preview',
+    previewModalTitle: 'Preview Comparison',
+    originalImage: 'Original',
+    compressedImage: 'Compressed',
+    close: 'Close',
+    previewNotAvailable: 'Preview not available',
   },
   zh: {
     title: 'TinyLocal',
@@ -158,6 +172,12 @@ const translations: Record<Language, Translations> = {
     footer: '使用 Rust + WebAssembly 构建。支持静态托管和离线使用。',
     optionsChanged: '选项已更改。',
     reprocessConfirm: (count) => `选项已更改。是否重新处理 ${count} 个已完成的文件？`,
+    preview: '预览',
+    previewModalTitle: '预览对比',
+    originalImage: '原图',
+    compressedImage: '压缩后',
+    close: '关闭',
+    previewNotAvailable: '预览不可用',
   },
 }
 

@@ -49,6 +49,12 @@ export function createRow(item: ItemState): HTMLDivElement {
   const actions = document.createElement('div');
   actions.className = 'row-actions';
 
+  const preview = document.createElement('button');
+  preview.className = 'ghost preview-btn';
+  preview.dataset.action = 'preview';
+  preview.textContent = t().preview;
+  preview.disabled = true;
+
   const download = document.createElement('button');
   download.className = 'ghost';
   download.dataset.action = 'download';
@@ -60,7 +66,7 @@ export function createRow(item: ItemState): HTMLDivElement {
   remove.dataset.action = 'delete';
   remove.textContent = t().delete;
 
-  actions.append(download, remove);
+  actions.append(preview, download, remove);
 
   row.append(name, sizes, reduction, status, actions);
   updateRow(row, item);
@@ -72,6 +78,7 @@ export function updateRow(row: HTMLElement, item: ItemState) {
   const sizes = row.querySelector('.file-sizes') as HTMLElement | null;
   const reduction = row.querySelector('.file-reduction') as HTMLElement | null;
   const status = row.querySelector('.file-status') as HTMLElement | null;
+  const preview = row.querySelector('[data-action="preview"]') as HTMLButtonElement | null;
   const download = row.querySelector('[data-action="download"]') as HTMLButtonElement | null;
   const remove = row.querySelector('[data-action="delete"]') as HTMLButtonElement | null;
   const tr = t();
@@ -112,6 +119,10 @@ export function updateRow(row: HTMLElement, item: ItemState) {
   if (remove) {
     remove.textContent = tr.delete;
   }
+  if (preview) {
+    preview.disabled = item.status !== 'done';
+    preview.textContent = tr.preview;
+  }
 }
 
 export function formatBytes(value: number): string {
@@ -125,4 +136,15 @@ export function formatPercent(original: number, output: number): string {
   if (original === 0) return '0%';
   const diff = ((original - output) / original) * 100;
   return `${diff.toFixed(1)}%`;
+}
+
+export function getMimeTypeFromFileName(fileName: string): string {
+  const ext = fileName.toLowerCase().split('.').pop();
+  const mimeTypes: Record<string, string> = {
+    png: 'image/png',
+    jpg: 'image/jpeg',
+    jpeg: 'image/jpeg',
+    webp: 'image/webp',
+  };
+  return mimeTypes[ext || ''] || 'image/png';
 }

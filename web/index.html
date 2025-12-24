@@ -11,6 +11,16 @@
     />
     <meta name="theme-color" content="#0a0f1f" />
     <link rel="manifest" href="./manifest.json" />
+    <style>
+      #previewModal {
+        opacity: 0;
+        visibility: hidden;
+      }
+      #previewModal.active {
+        opacity: 1;
+        visibility: visible;
+      }
+    </style>
   </head>
   <body>
     <div class="page">
@@ -121,6 +131,43 @@
           use.
         </p>
       </footer>
+    </div>
+
+    <!-- 预览模态框 -->
+    <div id="previewModal" class="preview-modal">
+      <div class="preview-modal-content">
+        <div class="preview-modal-header">
+          <h3 data-i18n="previewModalTitle">Preview Comparison</h3>
+          <button class="preview-modal-close" aria-label="Close">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
+        </div>
+        <div class="preview-modal-body">
+          <div class="preview-compare-container">
+            <!-- 原图 -->
+            <img id="previewOriginal" class="preview-image" alt="Original">
+            <!-- 压缩图 -->
+            <img id="previewCompressed" class="preview-image" alt="Compressed">
+            <!-- 滑块覆盖层 -->
+            <div class="preview-slider-overlay">
+              <div class="preview-slider-handle">
+                <div class="preview-slider-line"></div>
+                <div class="preview-slider-button">↔</div>
+                <div class="preview-slider-line"></div>
+              </div>
+            </div>
+            <!-- 标签 -->
+            <span class="preview-label preview-label-original" data-i18n="originalImage">Original</span>
+            <span class="preview-label preview-label-compressed" data-i18n="compressedImage">Compressed</span>
+          </div>
+        </div>
+        <div class="preview-modal-footer">
+          <span id="previewStats"></span>
+        </div>
+      </div>
     </div>
 
     <script type="module" src="./main.ts"></script>
