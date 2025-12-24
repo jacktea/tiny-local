@@ -43,9 +43,11 @@ pub fn compress_png(
     dithering: bool,
     resize_mode: &str,
     resize_value: u32,
+    _auto_rotate: bool, // PNG 通常不包含 EXIF，保留参数以统一接口
 ) -> Result<Vec<u8>, CompressorError> {
     let image = image::load_from_memory(data)?;
     let image = apply_resize(image, resize_mode, resize_value);
+    // 注意：image 库在加载时已经自动应用了 EXIF 方向（如果存在）
     let rgba = image.to_rgba8();
     let (width, height) = rgba.dimensions();
 

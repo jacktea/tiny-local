@@ -49,6 +49,8 @@ interface Translations {
   ditherPNGs: string
   progressiveJPEG: string
   convertPNGToWebP: string
+  autoRotate: string
+  stripExif: string
   downloadAll: string
   cancel: string
   privacyNote: string
@@ -64,8 +66,11 @@ interface Translations {
   done: string
   error: string
   abortedStatus: string
+  skipped: string
+  skippedStatus: string
   download: string
   delete: string
+  skip: string
   original: string
   saved: string
 
@@ -133,6 +138,8 @@ const translations: Record<Language, Translations> = {
     ditherPNGs: 'Dither PNGs',
     progressiveJPEG: 'Progressive JPEG',
     convertPNGToWebP: 'Convert PNG to WebP',
+    autoRotate: 'Auto-rotate (EXIF)',
+    stripExif: 'Remove EXIF metadata',
     downloadAll: 'Download all',
     cancel: 'Cancel',
     privacyNote: 'Your images never leave this device. No analytics or tracking.',
@@ -144,8 +151,11 @@ const translations: Record<Language, Translations> = {
     done: 'DONE',
     error: 'ERROR',
     abortedStatus: 'ABORTED',
+    skipped: 'SKIPPED',
+    skippedStatus: 'Skipped by user',
     download: 'Download',
     delete: 'Delete',
+    skip: 'Skip',
     original: 'original',
     saved: 'saved',
     files: 'files',
@@ -204,6 +214,8 @@ const translations: Record<Language, Translations> = {
     ditherPNGs: 'PNG 抖动',
     progressiveJPEG: '渐进式 JPEG',
     convertPNGToWebP: '将 PNG 转换为 WebP',
+    autoRotate: 'EXIF 自动旋转',
+    stripExif: '清除 EXIF 元数据',
     downloadAll: '全部下载',
     cancel: '取消',
     privacyNote: '您的图片永远不会离开此设备。无分析，无追踪。',
@@ -215,8 +227,11 @@ const translations: Record<Language, Translations> = {
     done: '完成',
     error: '错误',
     abortedStatus: '已取消',
+    skipped: '已跳过',
+    skippedStatus: '用户跳过',
     download: '下载',
     delete: '删除',
+    skip: '跳过',
     original: '原始',
     saved: '已节省',
     files: '个文件',

@@ -10,6 +10,8 @@ type QueueItem = {
   dithering: boolean
   progressive: boolean
   convertToWebp: boolean
+  autoRotate: boolean
+  stripExif: boolean
   targetSize?: number // 目标文件大小（字节）
   resizeMode?: string // 尺寸调整模式
   resizeValue?: number // 尺寸调整值
@@ -19,10 +21,12 @@ type WorkerRequest =
   | { type: 'enqueue'; items: QueueItem[] }
   | { type: 'abort' }
   | { type: 'ping' }
+  | { type: 'skip'; id: string } // 新增跳过请求
 
 let initialized = false
 let processing = false
 let abortRequested = false
+const skippedIds = new Set<string>() // 跟踪被跳过的文件ID
 
 const queue: QueueItem[] = []
 
@@ -47,6 +51,13 @@ async function processQueue() {
 
     const job = queue.shift()
     if (!job) continue
+
+    // 检查是否被跳过
+    if (skippedIds.has(job.id)) {
+      skippedIds.delete(job.id)
+      self.postMessage({ type: 'skipped', id: job.id })
+      continue
+    }
 
     const data = new Uint8Array(job.data)
 
@@ -74,7 +85,10 @@ async function processQueue() {
           job.targetSize,
           job.dithering,
           job.progressive,
-          job.convertToWebp
+          job.resizeMode,
+          job.resizeValue,
+          job.autoRotate,
+          job.stripExif
         )
         output = result.output
         finalQuality = result.quality
@@ -85,6 +99,8 @@ async function processQueue() {
             progressive: job.progressive,
             resize_mode: job.resizeMode || 'none',
             resize_value: job.resizeValue || 100,
+            auto_rotate: job.autoRotate,
+            strip_exif: job.stripExif,
           })
         } catch (error) {
           const message = error instanceof Error ? error.message : String(error)
@@ -119,7 +135,10 @@ async function findQualityForTargetSize(
   targetSize: number,
   dithering: boolean,
   progressive: boolean,
-  convertToWebp: boolean
+  resizeMode?: string,
+  resizeValue?: number,
+  autoRotate?: boolean,
+  stripExif?: boolean
 ): Promise<{ output: Uint8Array; quality: number }> {
   const minQuality = 40
   const maxQuality = 100
@@ -130,6 +149,10 @@ async function findQualityForTargetSize(
       return compress_image(data, format, quality, {
         dithering,
         progressive,
+        resize_mode: resizeMode || 'none',
+        resize_value: resizeValue || 100,
+        auto_rotate: autoRotate,
+        strip_exif: stripExif,
       })
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error)
@@ -237,6 +260,11 @@ self.onmessage = async (event: MessageEvent<WorkerRequest>) => {
       queue.length = 0
       self.postMessage({ type: 'aborted' })
     }
+    return
+  }
+
+  if (message.type === 'skip') {
+    skippedIds.add(message.id)
     return
   }
 

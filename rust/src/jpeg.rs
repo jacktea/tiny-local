@@ -43,8 +43,19 @@ pub fn compress_jpeg(
     progressive: bool,
     resize_mode: &str,
     resize_value: u32,
+    auto_rotate: bool,
+    _strip_exif: bool, // mozjpeg 会自动清除 EXIF
 ) -> Result<Vec<u8>, CompressorError> {
-    let image = image::load_from_memory(data)?;
+    let mut image = image::load_from_memory(data)?;
+
+    // 应用 EXIF 自动旋转（如果启用）
+    if auto_rotate {
+        // 尝试从原始JPEG数据读取EXIF方向
+        if let Ok(orientation) = crate::exif::get_exif_orientation(data) {
+            image = crate::exif::apply_exif_rotation(image, orientation);
+        }
+    }
+
     let image = apply_resize(image, resize_mode, resize_value);
     let rgb = image.to_rgb8();
     let (width, height) = rgb.dimensions();
@@ -82,8 +93,18 @@ pub fn compress_jpeg(
     _progressive: bool,
     resize_mode: &str,
     resize_value: u32,
+    auto_rotate: bool,
+    _strip_exif: bool, // wasm 重新编码会清除元数据
 ) -> Result<Vec<u8>, CompressorError> {
-    let image = image::load_from_memory(data)?;
+    let mut image = image::load_from_memory(data)?;
+
+    // 应用 EXIF 自动旋转（如果启用）
+    if auto_rotate {
+        if let Ok(orientation) = crate::exif::get_exif_orientation(data) {
+            image = crate::exif::apply_exif_rotation(image, orientation);
+        }
+    }
+
     let image = apply_resize(image, resize_mode, resize_value);
     let rgb = image.to_rgb8();
     let (width, height) = rgb.dimensions();

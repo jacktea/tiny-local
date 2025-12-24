@@ -1,6 +1,6 @@
 import { t } from './i18n'
 
-export type ItemStatus = 'queued' | 'processing' | 'done' | 'error' | 'aborted';
+export type ItemStatus = 'queued' | 'processing' | 'done' | 'error' | 'aborted' | 'skipped';
 
 export interface ItemState {
   id: string;
@@ -20,6 +20,8 @@ export const elements = {
   ditherInput: document.querySelector('#ditherInput') as HTMLInputElement,
   progressiveInput: document.querySelector('#progressiveInput') as HTMLInputElement,
   convertWebpInput: document.querySelector('#convertWebpInput') as HTMLInputElement,
+  autoRotateInput: document.querySelector('#autoRotateInput') as HTMLInputElement,
+  stripExifInput: document.querySelector('#stripExifInput') as HTMLInputElement,
   targetSizeInput: document.querySelector('#targetSizeInput') as HTMLInputElement,
   targetSizeUnit: document.querySelector('#targetSizeUnit') as HTMLSelectElement,
   targetSizeHint: document.querySelector('.target-size-hint') as HTMLElement,
@@ -69,12 +71,18 @@ export function createRow(item: ItemState): HTMLDivElement {
   download.textContent = t().download;
   download.disabled = true;
 
+  const skip = document.createElement('button');
+  skip.className = 'ghost skip-btn';
+  skip.dataset.action = 'skip';
+  skip.textContent = t().skip;
+  skip.style.display = 'none'; // 默认隐藏
+
   const remove = document.createElement('button');
   remove.className = 'ghost danger';
   remove.dataset.action = 'delete';
   remove.textContent = t().delete;
 
-  actions.append(preview, download, remove);
+  actions.append(preview, download, skip, remove);
 
   row.append(name, sizes, reduction, status, actions);
   updateRow(row, item);
@@ -88,6 +96,7 @@ export function updateRow(row: HTMLElement, item: ItemState) {
   const status = row.querySelector('.file-status') as HTMLElement | null;
   const preview = row.querySelector('[data-action="preview"]') as HTMLButtonElement | null;
   const download = row.querySelector('[data-action="download"]') as HTMLButtonElement | null;
+  const skip = row.querySelector('[data-action="skip"]') as HTMLButtonElement | null;
   const remove = row.querySelector('[data-action="delete"]') as HTMLButtonElement | null;
   const tr = t();
 
@@ -102,6 +111,8 @@ export function updateRow(row: HTMLElement, item: ItemState) {
       reduction.textContent = `${formatPercent(item.originalSize, item.outputSize)} ${tr.saved}`;
     } else if (item.error) {
       reduction.textContent = item.error;
+    } else if (item.status === 'skipped') {
+      reduction.textContent = tr.skippedStatus;
     } else {
       reduction.textContent = tr.waiting;
     }
@@ -114,6 +125,7 @@ export function updateRow(row: HTMLElement, item: ItemState) {
     done: tr.done,
     error: tr.error,
     aborted: tr.abortedStatus,
+    skipped: tr.skipped,
   };
   if (status) {
     status.textContent = statusMap[item.status] || item.status.toUpperCase();
@@ -130,6 +142,15 @@ export function updateRow(row: HTMLElement, item: ItemState) {
   if (preview) {
     preview.disabled = item.status !== 'done';
     preview.textContent = tr.preview;
+  }
+  if (skip) {
+    // 跳过按钮只在排队或处理中状态显示
+    if (item.status === 'queued' || item.status === 'processing') {
+      skip.style.display = 'inline-flex';
+      skip.disabled = item.status === 'processing';
+    } else {
+      skip.style.display = 'none';
+    }
   }
 }
 
