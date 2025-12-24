@@ -206,6 +206,8 @@ async function enqueueFiles(fileList: FileList | File[]) {
             progressive: elements.progressiveInput.checked,
             convertToWebp: elements.convertWebpInput.checked,
             targetSize: currentCompressionMode === 'targetSize' ? getTargetSizeBytes() : undefined,
+            resizeMode: elements.resizeEnabled.checked ? elements.resizeMode.value : undefined,
+            resizeValue: elements.resizeEnabled.checked ? parseInt(elements.resizeValue.value) : undefined,
           },
         ],
       },
@@ -329,6 +331,8 @@ async function reprocessCompletedFiles() {
             dithering: elements.ditherInput.checked,
             progressive: elements.progressiveInput.checked,
             convertToWebp: elements.convertWebpInput.checked,
+            resizeMode: elements.resizeEnabled.checked ? elements.resizeMode.value : undefined,
+            resizeValue: elements.resizeEnabled.checked ? parseInt(elements.resizeValue.value) : undefined,
           },
         ],
       },
@@ -550,6 +554,38 @@ function getTargetSizeBytes(): number {
     return value * 1024 * 1024
   }
   return value * 1024
+}
+
+function setupResize() {
+  // 尺寸调整开关
+  elements.resizeEnabled.addEventListener('change', () => {
+    if (elements.resizeEnabled.checked) {
+      elements.resizeControls.style.display = 'flex'
+    } else {
+      elements.resizeControls.style.display = 'none'
+    }
+  })
+
+  // 更新单位显示
+  const updateResizeUnit = () => {
+    const mode = elements.resizeMode.value
+    if (mode === 'percentage') {
+      elements.resizeUnit.textContent = '%'
+      elements.resizeValue.max = '99'
+      elements.resizeValue.value = Math.min(80, parseInt(elements.resizeValue.value) || 80).toString()
+    } else {
+      elements.resizeUnit.textContent = 'px'
+      elements.resizeValue.max = '10000'
+      if (mode === 'fixed' || mode === 'maxWidth') {
+        elements.resizeValue.value = '1920'
+      } else {
+        elements.resizeValue.value = '1080'
+      }
+    }
+  }
+
+  elements.resizeMode.addEventListener('change', updateResizeUnit)
+  updateResizeUnit() // 初始化
 }
 
 function setupControls() {
@@ -1043,6 +1079,7 @@ function setupTheme() {
 setupDragAndDrop()
 setupPresets()
 setupCompressionMode()
+setupResize()
 setupControls()
 setupServiceWorker()
 setupI18n()

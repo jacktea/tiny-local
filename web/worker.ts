@@ -11,6 +11,8 @@ type QueueItem = {
   progressive: boolean
   convertToWebp: boolean
   targetSize?: number // 目标文件大小（字节）
+  resizeMode?: string // 尺寸调整模式
+  resizeValue?: number // 尺寸调整值
 }
 
 type WorkerRequest =
@@ -81,6 +83,8 @@ async function processQueue() {
           output = compress_image(data, outputFormat, job.quality, {
             dithering: job.dithering,
             progressive: job.progressive,
+            resize_mode: job.resizeMode || 'none',
+            resize_value: job.resizeValue || 100,
           })
         } catch (error) {
           const message = error instanceof Error ? error.message : String(error)
