@@ -18,7 +18,7 @@ const worker = new Worker(new URL('./worker.ts', import.meta.url), {
 type WorkerMessage =
   | { type: 'ready'; version: string }
   | { type: 'started'; id: string }
-  | { type: 'completed'; id: string; output: Uint8Array; outputFormat: string }
+  | { type: 'completed'; id: string; output: Uint8Array; outputFormat: string; quality?: number }
   | { type: 'error'; id: string; message: string }
   | { type: 'aborted' }
 
@@ -188,6 +188,11 @@ async function enqueueFiles(fileList: FileList | File[]) {
     // 保存原始文件引用以便后续重新处理和预览
     state.originals.set(id, { name: file.name, file })
 
+    // 根据压缩模式确定质量参数
+    const quality = currentCompressionMode === 'targetSize'
+      ? 75 // 初始质量，后续会通过二分查找调整
+      : Number(elements.qualityInput.value)
+
     worker.postMessage(
       {
         type: 'enqueue',
@@ -196,10 +201,11 @@ async function enqueueFiles(fileList: FileList | File[]) {
             id,
             name: file.name,
             data: buffer,
-            quality: Number(elements.qualityInput.value),
+            quality,
             dithering: elements.ditherInput.checked,
             progressive: elements.progressiveInput.checked,
             convertToWebp: elements.convertWebpInput.checked,
+            targetSize: currentCompressionMode === 'targetSize' ? getTargetSizeBytes() : undefined,
           },
         ],
       },
@@ -450,6 +456,102 @@ function setupPresets() {
   })
 }
 
+// 压缩模式：quality 或 targetSize
+type CompressionMode = 'quality' | 'targetSize'
+
+let currentCompressionMode: CompressionMode = 'quality'
+
+function setupCompressionMode() {
+  const modeButtons = document.querySelectorAll('.mode-btn')
+  const targetSizeContainer = document.querySelector('.target-size-container') as HTMLElement
+  const sliderContainer = document.querySelector('.slider') as HTMLElement
+
+  const updateModeUI = (mode: CompressionMode) => {
+    currentCompressionMode = mode
+    modeButtons.forEach((btn) => {
+      if (btn instanceof HTMLElement && btn.dataset.mode === mode) {
+        btn.classList.add('active')
+      } else {
+        btn.classList.remove('active')
+      }
+    })
+
+    if (mode === 'targetSize') {
+      targetSizeContainer.style.display = 'flex'
+      sliderContainer.style.opacity = '0.5'
+      elements.qualityInput.disabled = true
+      updateTargetSizeHint()
+    } else {
+      targetSizeContainer.style.display = 'none'
+      sliderContainer.style.opacity = '1'
+      elements.qualityInput.disabled = false
+      elements.targetSizeHint.textContent = ''
+    }
+  }
+
+  // 绑定模式按钮事件
+  modeButtons.forEach((btn) => {
+    if (btn instanceof HTMLElement && btn.dataset.mode) {
+      btn.addEventListener('click', () => {
+        const mode = btn.dataset.mode as CompressionMode
+        updateModeUI(mode)
+      })
+    }
+  })
+
+  // 目标大小输入验证
+  const validateTargetSize = () => {
+    const value = parseFloat(elements.targetSizeInput.value)
+    const unit = elements.targetSizeUnit.value
+    let bytes = value
+
+    if (unit === 'KB') {
+      bytes = value * 1024
+    } else if (unit === 'MB') {
+      bytes = value * 1024 * 1024
+    }
+
+    // 检查是否有文件在队列中
+    const items = Array.from(state.items.values())
+    if (items.length > 0) {
+      const totalOriginalSize = items.reduce((sum, item) => sum + item.originalSize, 0)
+      const avgOriginalSize = totalOriginalSize / items.length
+
+      const tr = t()
+      if (bytes > avgOriginalSize * 0.99) {
+        elements.targetSizeHint.textContent = tr.targetSizeWarning || '目标大小可能大于原图，建议设置更小的值'
+        elements.targetSizeHint.style.color = 'var(--danger)'
+      } else if (bytes < avgOriginalSize * 0.1) {
+        elements.targetSizeHint.textContent = tr.targetSizeTooSmall || '目标大小非常小，可能导致严重的质量损失'
+        elements.targetSizeHint.style.color = 'var(--danger)'
+      } else {
+        elements.targetSizeHint.textContent = ''
+      }
+    }
+  }
+
+  elements.targetSizeInput.addEventListener('input', validateTargetSize)
+  elements.targetSizeUnit.addEventListener('change', validateTargetSize)
+}
+
+function updateTargetSizeHint() {
+  const tr = t()
+  elements.targetSizeHint.textContent = tr.targetSizeModeHint || '使用二分查找自动确定最佳质量参数'
+  elements.targetSizeHint.style.color = 'var(--muted)'
+}
+
+function getTargetSizeBytes(): number {
+  const value = parseFloat(elements.targetSizeInput.value)
+  const unit = elements.targetSizeUnit.value
+
+  if (unit === 'KB') {
+    return value * 1024
+  } else if (unit === 'MB') {
+    return value * 1024 * 1024
+  }
+  return value * 1024
+}
+
 function setupControls() {
   elements.qualityValue.textContent = elements.qualityInput.value
   elements.qualityInput.addEventListener('input', () => {
@@ -531,6 +633,7 @@ let currentEngineVersion: string | null = null
 
 // 预览模态框状态
 let previewUrls: { original: string; compressed: string } | null = null
+let currentPreviewId: string | null = null // 当前预览的文件ID
 
 // 打开预览模态框
 function openPreview(id: string) {
@@ -539,6 +642,8 @@ function openPreview(id: string) {
   const item = state.items.get(id)
 
   if (!original || !output || !item) return
+
+  currentPreviewId = id
 
   // 清理之前的 URL（如果存在）
   if (previewUrls) {
@@ -674,6 +779,8 @@ function showPreviewModal(data: {
 function closePreviewModal() {
   const modal = document.getElementById('previewModal') as HTMLElement
   if (!modal) return
+
+  currentPreviewId = null
 
   // 释放 Blob URL
   if (previewUrls) {
@@ -935,6 +1042,7 @@ function setupTheme() {
 
 setupDragAndDrop()
 setupPresets()
+setupCompressionMode()
 setupControls()
 setupServiceWorker()
 setupI18n()

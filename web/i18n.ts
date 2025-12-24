@@ -27,6 +27,14 @@ interface Translations {
   dropFilesSubtitle: string
 
   // Controls
+  compressionMode: string
+  modeQuality: string
+  modeTargetSize: string
+  targetFileSize: string
+  targetSizeHint: string
+  targetSizeWarning: string
+  targetSizeTooSmall: string
+  targetSizeModeHint: string
   presetMode: string
   presetCustom: string
   presetSocial: string
@@ -98,6 +106,14 @@ const translations: Record<Language, Translations> = {
     aborted: 'Aborted',
     dropFilesTitle: 'Drop files to compress',
     dropFilesSubtitle: 'or click to select images',
+    compressionMode: 'Compression Mode',
+    modeQuality: 'Quality',
+    modeTargetSize: 'Target Size',
+    targetFileSize: 'Target File Size',
+    targetSizeHint: '',
+    targetSizeWarning: 'Target size may be larger than original, consider a smaller value',
+    targetSizeTooSmall: 'Target size is very small, may cause severe quality loss',
+    targetSizeModeHint: 'Using binary search to find optimal quality',
     presetMode: 'Preset Mode',
     presetCustom: 'Custom',
     presetSocial: 'Social',
@@ -156,6 +172,14 @@ const translations: Record<Language, Translations> = {
     aborted: '已取消',
     dropFilesTitle: '拖放文件进行压缩',
     dropFilesSubtitle: '或点击选择图片',
+    compressionMode: '压缩模式',
+    modeQuality: '质量模式',
+    modeTargetSize: '目标大小',
+    targetFileSize: '目标文件大小',
+    targetSizeHint: '',
+    targetSizeWarning: '目标大小可能大于原图，建议设置更小的值',
+    targetSizeTooSmall: '目标大小非常小，可能导致严重的质量损失',
+    targetSizeModeHint: '使用二分查找自动确定最佳质量参数',
     presetMode: '预设模式',
     presetCustom: '自定义',
     presetSocial: '社交分享',

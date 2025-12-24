@@ -10,6 +10,7 @@ type QueueItem = {
   dithering: boolean
   progressive: boolean
   convertToWebp: boolean
+  targetSize?: number // 目标文件大小（字节）
 }
 
 type WorkerRequest =
@@ -61,25 +62,41 @@ async function processQueue() {
       self.postMessage({ type: 'started', id: job.id })
 
       let output: Uint8Array
-      try {
-        output = compress_image(data, outputFormat, job.quality, {
-          dithering: job.dithering,
-          progressive: job.progressive,
-        })
-      } catch (error) {
-        const message = error instanceof Error ? error.message : String(error)
-        if (
-          outputFormat === 'webp' &&
-          message.includes('WebP feature not enabled')
-        ) {
-          output = await encodeWebpFallback(data, job.quality)
-        } else {
-          throw error
+      let finalQuality = job.quality
+
+      // 如果设置了目标大小，使用二分查找找到最佳质量
+      if (job.targetSize) {
+        const result = await findQualityForTargetSize(
+          data,
+          outputFormat,
+          job.targetSize,
+          job.dithering,
+          job.progressive,
+          job.convertToWebp
+        )
+        output = result.output
+        finalQuality = result.quality
+      } else {
+        try {
+          output = compress_image(data, outputFormat, job.quality, {
+            dithering: job.dithering,
+            progressive: job.progressive,
+          })
+        } catch (error) {
+          const message = error instanceof Error ? error.message : String(error)
+          if (
+            outputFormat === 'webp' &&
+            message.includes('WebP feature not enabled')
+          ) {
+            output = await encodeWebpFallback(data, job.quality)
+          } else {
+            throw error
+          }
         }
       }
 
       self.postMessage(
-        { type: 'completed', id: job.id, output, outputFormat },
+        { type: 'completed', id: job.id, output, outputFormat, quality: finalQuality },
         [output.buffer as ArrayBuffer]
       )
     } catch (error) {
@@ -89,6 +106,93 @@ async function processQueue() {
   }
 
   processing = false
+}
+
+// 使用二分查找找到符合目标大小的最佳质量
+async function findQualityForTargetSize(
+  data: Uint8Array,
+  format: string,
+  targetSize: number,
+  dithering: boolean,
+  progressive: boolean,
+  convertToWebp: boolean
+): Promise<{ output: Uint8Array; quality: number }> {
+  const minQuality = 40
+  const maxQuality = 100
+  const tolerance = 0.05 // 允许5%的误差
+
+  const compress = async (quality: number): Promise<Uint8Array> => {
+    try {
+      return compress_image(data, format, quality, {
+        dithering,
+        progressive,
+      })
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error)
+      if (format === 'webp' && message.includes('WebP feature not enabled')) {
+        return await encodeWebpFallback(data, quality)
+      }
+      throw error
+    }
+  }
+
+  // 二分查找
+  let low = minQuality
+  let high = maxQuality
+  let bestOutput: Uint8Array | null = null
+  let bestQuality = minQuality
+
+  // 先检查最大质量是否已经满足目标大小
+  const maxOutput = await compress(maxQuality)
+  if (maxOutput.length <= targetSize * (1 + tolerance)) {
+    return { output: maxOutput, quality: maxQuality }
+  }
+
+  // 检查最小质量是否仍然太大
+  const minOutput = await compress(minQuality)
+  if (minOutput.length > targetSize) {
+    // 无法达到目标大小，返回最小质量的结果
+    return { output: minOutput, quality: minQuality }
+  }
+
+  // 二分查找最佳质量
+  while (high - low > 2) {
+    const mid = Math.floor((low + high) / 2)
+    const output = await compress(mid)
+
+    if (output.length > targetSize * (1 + tolerance)) {
+      // 文件太大，需要更低的质量
+      high = mid
+    } else if (output.length < targetSize * (1 - tolerance)) {
+      // 文件太小，可以尝试更高质量
+      low = mid
+      bestOutput = output
+      bestQuality = mid
+    } else {
+      // 在容忍范围内
+      bestOutput = output
+      bestQuality = mid
+      break
+    }
+  }
+
+  // 尝试 low 和 high，找到最接近目标大小的
+  const lowOutput = await compress(low)
+  const highOutput = await compress(high)
+
+  const lowDiff = Math.abs(lowOutput.length - targetSize)
+  const highDiff = Math.abs(highOutput.length - targetSize)
+  const bestDiff = bestOutput ? Math.abs(bestOutput.length - targetSize) : Infinity
+
+  if (lowDiff <= highDiff && lowDiff <= bestDiff) {
+    return { output: lowOutput, quality: low }
+  } else if (highDiff <= bestDiff) {
+    return { output: highOutput, quality: high }
+  } else if (bestOutput) {
+    return { output: bestOutput, quality: bestQuality }
+  }
+
+  return { output: highOutput, quality: high }
 }
 
 async function encodeWebpFallback(
