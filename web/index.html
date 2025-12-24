@@ -146,6 +146,31 @@
             </label>
           </div>
 
+          <!-- 尺寸调整 -->
+          <div class="resize-container">
+            <label class="resize-label">
+              <input id="resizeEnabled" type="checkbox" />
+              <span data-i18n="resizeImage">Resize Image</span>
+            </label>
+            <div class="resize-controls" style="display: none;">
+              <select id="resizeMode" class="resize-select">
+                <option value="percentage" data-i18n="resizePercentage">Percentage</option>
+                <option value="maxWidth" data-i18n="resizeMaxWidth">Max Width</option>
+                <option value="maxHeight" data-i18n="resizeMaxHeight">Max Height</option>
+                <option value="fixed" data-i18n="resizeFixed">Fixed Width</option>
+              </select>
+              <input
+                id="resizeValue"
+                type="number"
+                min="1"
+                max="10000"
+                value="80"
+                class="resize-input"
+              />
+              <span class="resize-unit" id="resizeUnit">%</span>
+            </div>
+          </div>
+
           <div class="actions">
             <button
               id="downloadAll"

@@ -299,6 +299,59 @@ h1 {
   margin: 0;
 }
 
+/* 尺寸调整容器 */
+.resize-container {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  background: var(--bg);
+  border-radius: 10px;
+}
+
+.resize-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  user-select: none;
+}
+
+.resize-controls {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.resize-select {
+  flex: 1;
+  padding: 8px 12px;
+  border: 1px solid rgba(10, 15, 31, 0.2);
+  border-radius: 8px;
+  font-size: 0.9rem;
+  background: var(--card);
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.resize-input {
+  width: 80px;
+  padding: 8px 12px;
+  border: 1px solid rgba(10, 15, 31, 0.2);
+  border-radius: 8px;
+  font-size: 0.9rem;
+  background: var(--card);
+  color: var(--ink);
+}
+
+.resize-unit {
+  font-size: 0.9rem;
+  color: var(--muted);
+  min-width: 24px;
+}
+
 .slider label {
   font-weight: 600;
 }

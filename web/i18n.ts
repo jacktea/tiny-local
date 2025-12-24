@@ -35,6 +35,11 @@ interface Translations {
   targetSizeWarning: string
   targetSizeTooSmall: string
   targetSizeModeHint: string
+  resizeImage: string
+  resizePercentage: string
+  resizeMaxWidth: string
+  resizeMaxHeight: string
+  resizeFixed: string
   presetMode: string
   presetCustom: string
   presetSocial: string
@@ -114,6 +119,11 @@ const translations: Record<Language, Translations> = {
     targetSizeWarning: 'Target size may be larger than original, consider a smaller value',
     targetSizeTooSmall: 'Target size is very small, may cause severe quality loss',
     targetSizeModeHint: 'Using binary search to find optimal quality',
+    resizeImage: 'Resize Image',
+    resizePercentage: 'Percentage',
+    resizeMaxWidth: 'Max Width',
+    resizeMaxHeight: 'Max Height',
+    resizeFixed: 'Fixed Width',
     presetMode: 'Preset Mode',
     presetCustom: 'Custom',
     presetSocial: 'Social',
@@ -180,6 +190,11 @@ const translations: Record<Language, Translations> = {
     targetSizeWarning: '目标大小可能大于原图，建议设置更小的值',
     targetSizeTooSmall: '目标大小非常小，可能导致严重的质量损失',
     targetSizeModeHint: '使用二分查找自动确定最佳质量参数',
+    resizeImage: '调整图片尺寸',
+    resizePercentage: '百分比',
+    resizeMaxWidth: '最大宽度',
+    resizeMaxHeight: '最大高度',
+    resizeFixed: '固定宽度',
     presetMode: '预设模式',
     presetCustom: '自定义',
     presetSocial: '社交分享',

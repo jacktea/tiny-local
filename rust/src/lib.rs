@@ -23,6 +23,9 @@ pub fn init() {
 struct CompressOptions {
     dithering: Option<bool>,
     progressive: Option<bool>,
+    // 尺寸调整选项
+    resize_mode: Option<String>, // "none", "percentage", "maxWidth", "maxHeight", "fixed"
+    resize_value: Option<u32>,   // 百分比值或像素值
 }
 
 #[wasm_bindgen]
@@ -39,11 +42,26 @@ pub fn compress_image(
         JsValue::from_str(&CompressorError::UnsupportedFormat(format.to_string()).to_string())
     })?;
 
+    let resize_mode = opts.resize_mode.as_deref().unwrap_or("none");
+    let resize_value = opts.resize_value.unwrap_or(100);
+
     match format {
-        InputFormat::Png => png::compress_png(data, quality, opts.dithering.unwrap_or(true))
-            .map_err(map_err),
-        InputFormat::Jpeg => jpeg::compress_jpeg(data, quality, opts.progressive.unwrap_or(true))
-            .map_err(map_err),
+        InputFormat::Png => png::compress_png(
+            data,
+            quality,
+            opts.dithering.unwrap_or(true),
+            resize_mode,
+            resize_value,
+        )
+        .map_err(map_err),
+        InputFormat::Jpeg => jpeg::compress_jpeg(
+            data,
+            quality,
+            opts.progressive.unwrap_or(true),
+            resize_mode,
+            resize_value,
+        )
+        .map_err(map_err),
         InputFormat::Webp => {
             #[cfg(feature = "webp")]
             {
