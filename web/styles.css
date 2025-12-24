@@ -214,6 +214,91 @@ h1 {
   min-height: 1.2em;
 }
 
+/* 压缩模式选择器 */
+.mode-selector {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.mode-selector label {
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.mode-buttons {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+
+.mode-btn {
+  padding: 10px;
+  border: 1px solid rgba(10, 15, 31, 0.15);
+  background: var(--bg);
+  border-radius: 10px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-align: center;
+}
+
+.mode-btn:hover {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.mode-btn.active {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: #fff;
+}
+
+/* 目标文件大小输入 */
+.target-size-container {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.target-size-container label {
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.target-size-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.target-size-row input[type="number"] {
+  flex: 1;
+  padding: 8px 12px;
+  border: 1px solid rgba(10, 15, 31, 0.2);
+  border-radius: 8px;
+  font-size: 0.95rem;
+  background: var(--bg);
+  color: var(--ink);
+}
+
+.target-size-row select {
+  padding: 8px 12px;
+  border: 1px solid rgba(10, 15, 31, 0.2);
+  border-radius: 8px;
+  font-size: 0.95rem;
+  background: var(--bg);
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.target-size-hint {
+  font-size: 0.8rem;
+  color: var(--muted);
+  margin: 0;
+}
+
 .slider label {
   font-weight: 600;
 }

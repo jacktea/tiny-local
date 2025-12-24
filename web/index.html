@@ -87,6 +87,36 @@
             <p class="preset-description" id="presetDescription"></p>
           </div>
 
+          <!-- 压缩模式选择 -->
+          <div class="mode-selector">
+            <label data-i18n="compressionMode">Compression Mode</label>
+            <div class="mode-buttons">
+              <button type="button" class="mode-btn active" data-mode="quality" data-i18n="modeQuality">Quality</button>
+              <button type="button" class="mode-btn" data-mode="targetSize" data-i18n="modeTargetSize">Target Size</button>
+            </div>
+          </div>
+
+          <!-- 目标文件大小输入 -->
+          <div class="target-size-container" style="display: none;">
+            <label for="targetSizeInput" data-i18n="targetFileSize">Target File Size</label>
+            <div class="target-size-row">
+              <input
+                id="targetSizeInput"
+                type="number"
+                min="10"
+                max="10000"
+                step="10"
+                value="500"
+                placeholder="500"
+              />
+              <select id="targetSizeUnit">
+                <option value="KB" selected>KB</option>
+                <option value="MB">MB</option>
+              </select>
+            </div>
+            <p class="target-size-hint" data-i18n="targetSizeHint"></p>
+          </div>
+
           <div class="slider">
             <label for="qualityInput" data-i18n="quality">Quality</label>
             <div class="slider-row">
