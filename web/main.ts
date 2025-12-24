@@ -1,6 +1,14 @@
 import './styles.css'
 import { zipSync } from 'fflate'
-import { createRow, elements, ItemState, updateRow as renderRow } from './ui'
+import {
+  createRow,
+  elements,
+  ItemState,
+  updateRow as renderRow,
+  getMimeTypeFromFileName,
+  formatBytes,
+  formatPercent,
+} from './ui'
 import { t, setLanguage, getLanguage } from './i18n'
 
 const worker = new Worker(new URL('./worker.ts', import.meta.url), {
@@ -21,7 +29,7 @@ interface OutputItem {
 
 interface OriginalFile {
   name: string
-  data: ArrayBuffer
+  file: File
 }
 
 const state = {
@@ -110,6 +118,12 @@ function updateRow(item: ItemState) {
   if (remove) {
     remove.onclick = () => removeItem(item.id)
   }
+  const preview = row.querySelector(
+    '[data-action="preview"]'
+  ) as HTMLButtonElement | null
+  if (preview) {
+    preview.onclick = () => openPreview(item.id)
+  }
   renderRow(row, item)
 }
 
@@ -171,8 +185,8 @@ async function enqueueFiles(fileList: FileList | File[]) {
     updateStats()
 
     const buffer = await file.arrayBuffer()
-    // 保存原始文件数据以便后续重新处理
-    state.originals.set(id, { name: file.name, data: buffer })
+    // 保存原始文件引用以便后续重新处理和预览
+    state.originals.set(id, { name: file.name, file })
 
     worker.postMessage(
       {
@@ -275,7 +289,7 @@ function setupDragAndDrop() {
   })
 }
 
-function reprocessCompletedFiles() {
+async function reprocessCompletedFiles() {
   const completedItems = Array.from(state.items.values()).filter(
     (item) => item.status === 'done'
   )
@@ -296,7 +310,7 @@ function reprocessCompletedFiles() {
     updateRow(item)
 
     // 使用新的选项重新处理
-    const buffer = original.data.slice(0) // 创建新的 ArrayBuffer
+    const buffer = await original.file.arrayBuffer()
     worker.postMessage(
       {
         type: 'enqueue',
@@ -338,7 +352,7 @@ function setupControls() {
         (item) => item.status === 'done'
       ).length
       if (completedCount > 0 && confirm(t().reprocessConfirm(completedCount))) {
-        reprocessCompletedFiles()
+        void reprocessCompletedFiles()
       }
     }
   }
@@ -378,6 +392,252 @@ function setupServiceWorker() {
 let currentStatus: 'ready' | 'idle' | 'compressing' | 'complete' | 'aborted' =
   'idle'
 let currentEngineVersion: string | null = null
+
+// 预览模态框状态
+let previewUrls: { original: string; compressed: string } | null = null
+
+// 打开预览模态框
+function openPreview(id: string) {
+  const original = state.originals.get(id)
+  const output = state.outputs.get(id)
+  const item = state.items.get(id)
+
+  if (!original || !output || !item) return
+
+  // 清理之前的 URL（如果存在）
+  if (previewUrls) {
+    URL.revokeObjectURL(previewUrls.original)
+    URL.revokeObjectURL(previewUrls.compressed)
+    previewUrls = null
+  }
+
+  // 创建原图 Blob URL
+  const originalMimeType =
+    original.file.type || getMimeTypeFromFileName(original.name)
+  const originalBlob = original.file.slice(
+    0,
+    original.file.size,
+    originalMimeType
+  )
+  const originalUrl = URL.createObjectURL(originalBlob)
+
+  // 创建压缩图 Blob URL - 使用与下载函数相同的方式
+  const outputMimeType = mimeByFormat[output.format]
+  const outputBlob = new Blob([output.data.buffer as ArrayBuffer], {
+    type: outputMimeType ?? 'application/octet-stream',
+  })
+  const outputUrl = URL.createObjectURL(outputBlob)
+
+  // 保存 URL 以便清理
+  previewUrls = { original: originalUrl, compressed: outputUrl }
+
+  // 显示模态框
+  showPreviewModal({
+    originalUrl,
+    outputUrl,
+    originalSize: item.originalSize,
+    outputSize: item.outputSize!,
+  })
+}
+
+// 显示预览模态框
+function showPreviewModal(data: {
+  originalUrl: string
+  outputUrl: string
+  originalSize: number
+  outputSize: number
+}) {
+  const modal = document.getElementById('previewModal') as HTMLElement
+  if (!modal) return
+
+  // 设置图片源
+  const originalImg = modal.querySelector(
+    '#previewOriginal'
+  ) as HTMLImageElement
+  const compressedImg = modal.querySelector(
+    '#previewCompressed'
+  ) as HTMLImageElement
+
+  if (!originalImg || !compressedImg) return
+
+  // 先清除旧的图片源，确保重新加载
+  originalImg.src = ''
+  compressedImg.src = ''
+
+  // 重置图片状态
+  originalImg.style.opacity = '0'
+  compressedImg.style.opacity = '0'
+
+  // 图片加载完成后的处理
+  let originalLoaded = false
+  let compressedLoaded = false
+
+  const checkAndShow = () => {
+    if (originalLoaded && compressedLoaded) {
+      originalImg.style.opacity = '1'
+      compressedImg.style.opacity = '1'
+    }
+  }
+
+  originalImg.onload = () => {
+    originalLoaded = true
+    checkAndShow()
+  }
+  originalImg.onerror = (e) => {
+    console.error('Failed to load original image', {
+      url: data.originalUrl,
+      src: originalImg.src,
+      error: e,
+    })
+    originalLoaded = true
+    checkAndShow()
+  }
+
+  compressedImg.onload = () => {
+    compressedLoaded = true
+    checkAndShow()
+  }
+  compressedImg.onerror = (e) => {
+    console.error('Failed to load compressed image', {
+      url: data.outputUrl,
+      src: compressedImg.src,
+      error: e,
+    })
+    compressedLoaded = true
+    checkAndShow()
+  }
+
+  // 设置新的图片源（使用 setTimeout 确保清除操作完成）
+  setTimeout(() => {
+    originalImg.src = data.originalUrl
+    compressedImg.src = data.outputUrl
+  }, 0)
+
+  // 设置统计信息
+  const stats = modal.querySelector('#previewStats') as HTMLElement
+  if (stats) {
+    stats.textContent = `${formatBytes(data.originalSize)} → ${formatBytes(
+      data.outputSize
+    )} (${formatPercent(data.originalSize, data.outputSize)} ${t().saved})`
+  }
+
+  // 重置滑块位置
+  const handle = modal.querySelector('.preview-slider-handle') as HTMLElement
+  if (handle) {
+    handle.style.left = '50%'
+  }
+  if (compressedImg) {
+    compressedImg.style.clipPath = 'inset(0 50% 0 0)'
+  }
+
+  // 显示模态框
+  modal.classList.add('active')
+}
+
+// 关闭预览模态框
+function closePreviewModal() {
+  const modal = document.getElementById('previewModal') as HTMLElement
+  if (!modal) return
+
+  // 释放 Blob URL
+  if (previewUrls) {
+    URL.revokeObjectURL(previewUrls.original)
+    URL.revokeObjectURL(previewUrls.compressed)
+    previewUrls = null
+  }
+
+  const originalImg = modal.querySelector(
+    '#previewOriginal'
+  ) as HTMLImageElement
+  const compressedImg = modal.querySelector(
+    '#previewCompressed'
+  ) as HTMLImageElement
+
+  if (originalImg) originalImg.src = ''
+  if (compressedImg) compressedImg.src = ''
+
+  modal.classList.remove('active')
+}
+
+// 设置预览滑块交互
+function setupPreviewSlider() {
+  const container = document.querySelector(
+    '.preview-compare-container'
+  ) as HTMLElement
+  const handle = document.querySelector('.preview-slider-handle') as HTMLElement
+  const compressedImg = document.getElementById(
+    'previewCompressed'
+  ) as HTMLImageElement
+  const closeBtn = document.querySelector('.preview-modal-close') as HTMLElement
+  const modal = document.getElementById('previewModal') as HTMLElement
+
+  if (!container || !handle || !compressedImg || !closeBtn || !modal) return
+
+  let isDragging = false
+
+  // 更新滑块位置
+  const updateSlider = (clientX: number) => {
+    const rect = container.getBoundingClientRect()
+    let percent = ((clientX - rect.left) / rect.width) * 100
+    percent = Math.max(0, Math.min(100, percent))
+
+    handle.style.left = `${percent}%`
+    compressedImg.style.clipPath = `inset(0 ${100 - percent}% 0 0)`
+  }
+
+  // 鼠标事件
+  handle.addEventListener('mousedown', (e) => {
+    e.preventDefault()
+    e.stopPropagation()
+    isDragging = true
+  })
+  document.addEventListener('mouseup', () => (isDragging = false))
+  document.addEventListener('mousemove', (e) => {
+    if (!isDragging) return
+    e.preventDefault()
+    updateSlider(e.clientX)
+  })
+
+  // 触摸事件
+  handle.addEventListener('touchstart', (e) => {
+    e.preventDefault()
+    e.stopPropagation()
+    isDragging = true
+  })
+  document.addEventListener('touchend', () => (isDragging = false))
+  document.addEventListener(
+    'touchmove',
+    (e) => {
+      if (!isDragging) return
+      e.preventDefault()
+      updateSlider(e.touches[0].clientX)
+    },
+    { passive: false }
+  )
+
+  // 点击容器跳转滑块
+  container.addEventListener('click', (e) => {
+    if (e.target === handle || handle.contains(e.target as Node)) return
+    updateSlider(e.clientX)
+  })
+
+  // 关闭按钮
+  closeBtn.addEventListener('click', closePreviewModal)
+
+  // 点击背景关闭
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) {
+      closePreviewModal()
+    }
+  })
+
+  // ESC 键关闭
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && modal.classList.contains('active')) {
+      closePreviewModal()
+    }
+  })
+}
 
 function setupI18n() {
   // 更新所有带有 data-i18n 属性的元素
@@ -456,6 +716,7 @@ setupDragAndDrop()
 setupControls()
 setupServiceWorker()
 setupI18n()
+setupPreviewSlider()
 updateStats()
 
 worker.postMessage({ type: 'ping' })
