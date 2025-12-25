@@ -48,6 +48,79 @@ npm run build
 
 输出文件生成在 `dist/` 目录，可直接用于静态托管（Vercel、Cloudflare Pages、GitHub Pages 等）。
 
+## Cloudflare Workers 部署
+
+### 前置要求
+
+- Cloudflare 账户
+- `wrangler` CLI 工具（通过 `npm install -g wrangler` 安装）
+
+### 部署步骤
+
+1. **在 Cloudflare 上创建一个 Workers**
+
+   - 登录 [Cloudflare Dashboard](https://dash.cloudflare.com/)
+   - 进入 Workers & Pages
+   - 点击 "Create application" → "Create Worker"
+   - 输入 Worker 名称（例如：`tinylocal`）
+   - 点击 "Deploy" 创建
+
+2. **修改 `wrangler.toml` 配置**
+
+   编辑项目根目录下的 `wrangler.toml` 文件，将 `name` 字段修改为您在 Cloudflare 上创建的 Worker 名称：
+
+   ```toml
+   name = "your-worker-name"  # 替换为您的 Worker 名称
+   compatibility_date = "2025-12-01"
+
+   [assets]
+   directory = "dist"
+   ```
+
+3. **生成 Cloudflare API Token**
+
+   - 访问 [Cloudflare API Tokens](https://dash.cloudflare.com/profile/api-tokens)
+   - 点击 "Create Token"
+   - 使用 "Edit Cloudflare Workers" 模板，或手动配置以下权限：
+     - **Account** → **Workers Scripts** → **Edit**
+     - **Account** → **Account Settings** → **Read**
+     - **User** → **Memberships** → **Read**
+     - **User** → **User Details** → **Read**
+   - 点击 "Continue to summary" → "Create Token"
+   - 复制生成的 Token（只显示一次，请妥善保存）
+
+4. **配置 Wrangler 认证**
+
+   在终端中运行以下命令，输入您的 API Token：
+
+   ```bash
+   wrangler login
+   ```
+
+   或者设置环境变量：
+
+   ```bash
+   export CLOUDFLARE_API_TOKEN="your-api-token"
+   ```
+
+5. **部署到 Cloudflare Workers**
+
+   确保已完成生产构建，然后运行：
+
+   ```bash
+   wrangler deploy
+   ```
+
+   部署成功后，您将获得一个类似 `https://your-worker-name.your-subdomain.workers.dev` 的 URL。
+
+### 自定义域名（可选）
+
+如需使用自定义域名：
+
+1. 在 Cloudflare Dashboard 中进入您的 Worker
+2. 点击 "Triggers" → "Custom Domains"
+3. 添加您的自定义域名并按照提示完成 DNS 配置
+
 ## 项目结构
 
 ```
