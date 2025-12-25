@@ -6,7 +6,7 @@
     "dev": "node scripts/dev.mjs",
     "build": "pnpm run wasm:build && pnpm run wasm:opt && vite build",
     "preview": "vite preview",
-    "wasm:build": "wasm-pack build rust --target web --out-dir ../web/pkg --release",
+    "wasm:build": "wasm-pack build rust --target web --out-dir ../web/pkg --release --features avif",
     "wasm:opt": "bash scripts/optimize-wasm.sh"
   },
   "dependencies": {

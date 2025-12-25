@@ -49,6 +49,7 @@ interface Translations {
   ditherPNGs: string
   progressiveJPEG: string
   convertPNGToWebP: string
+  convertToAvif: string
   pngTruecolor: string
   autoRotate: string
   stripExif: string
@@ -95,6 +96,10 @@ interface Translations {
   compressedImage: string
   close: string
   previewNotAvailable: string
+
+  // Confirm dialog
+  confirm: string
+  confirmTitle: string
 }
 
 const translations: Record<Language, Translations> = {
@@ -139,6 +144,7 @@ const translations: Record<Language, Translations> = {
     ditherPNGs: 'Dither PNGs',
     progressiveJPEG: 'Progressive JPEG',
     convertPNGToWebP: 'Convert PNG to WebP',
+    convertToAvif: 'Convert to AVIF',
     pngTruecolor: 'Keep PNG truecolor',
     autoRotate: 'Auto-rotate (EXIF)',
     stripExif: 'Remove EXIF metadata',
@@ -174,6 +180,8 @@ const translations: Record<Language, Translations> = {
     compressedImage: 'Compressed',
     close: 'Close',
     previewNotAvailable: 'Preview not available',
+    confirm: 'Confirm',
+    confirmTitle: 'Confirm',
   },
   zh: {
     title: 'TinyLocal',
@@ -216,6 +224,7 @@ const translations: Record<Language, Translations> = {
     ditherPNGs: 'PNG 抖动',
     progressiveJPEG: '渐进式 JPEG',
     convertPNGToWebP: '将 PNG 转换为 WebP',
+    convertToAvif: '转换为 AVIF',
     pngTruecolor: '保留 PNG 真彩',
     autoRotate: 'EXIF 自动旋转',
     stripExif: '清除 EXIF 元数据',
@@ -250,6 +259,8 @@ const translations: Record<Language, Translations> = {
     compressedImage: '压缩后',
     close: '关闭',
     previewNotAvailable: '预览不可用',
+    confirm: '确认',
+    confirmTitle: '确认',
   },
 }
 

@@ -10,6 +10,7 @@ type QueueItem = {
   dithering: boolean
   progressive: boolean
   convertToWebp: boolean
+  convertToAvif: boolean
   pngTruecolor: boolean
   autoRotate: boolean
   stripExif: boolean
@@ -69,7 +70,9 @@ async function processQueue() {
       }
 
       let outputFormat = detected
-      if (job.convertToWebp && detected === 'png') {
+      if (job.convertToAvif && (detected === 'png' || detected === 'jpeg' || detected === 'webp')) {
+        outputFormat = 'avif'
+      } else if (job.convertToWebp && detected === 'png') {
         outputFormat = 'webp'
       }
 
@@ -112,6 +115,11 @@ async function processQueue() {
             message.includes('WebP feature not enabled')
           ) {
             output = await encodeWebpFallback(data, job.quality)
+          } else if (
+            outputFormat === 'avif' &&
+            message.includes('AVIF encoding requires')
+          ) {
+            output = await encodeAvifFallback(data, job.quality)
           } else {
             throw error
           }
@@ -163,6 +171,9 @@ async function findQualityForTargetSize(
       const message = error instanceof Error ? error.message : String(error)
       if (format === 'webp' && message.includes('WebP feature not enabled')) {
         return await encodeWebpFallback(data, quality)
+      }
+      if (format === 'avif' && message.includes('AVIF encoding requires')) {
+        return await encodeAvifFallback(data, quality)
       }
       throw error
     }
@@ -245,6 +256,44 @@ async function encodeWebpFallback(
   ctx.drawImage(bitmap, 0, 0)
   const outBlob = await canvas.convertToBlob({
     type: 'image/webp',
+    quality: quality / 100,
+  })
+  const buffer = await outBlob.arrayBuffer()
+  return new Uint8Array(buffer)
+}
+
+async function encodeAvifFallback(
+  data: Uint8Array,
+  quality: number
+): Promise<Uint8Array> {
+  if (!('OffscreenCanvas' in self)) {
+    throw new Error('AVIF encoding not supported in this browser')
+  }
+
+  // 检查浏览器是否支持AVIF编码
+  const tempCanvas = new OffscreenCanvas(1, 1)
+  const tempCtx = tempCanvas.getContext('2d')
+  if (!tempCtx) {
+    throw new Error('AVIF encoding unavailable (no 2D context)')
+  }
+
+  // 尝试创建AVIF blob来测试支持
+  try {
+    await tempCanvas.convertToBlob({ type: 'image/avif' })
+  } catch {
+    throw new Error('AVIF encoding not supported in this browser')
+  }
+
+  const blob = new Blob([data.buffer as ArrayBuffer])
+  const bitmap = await createImageBitmap(blob)
+  const canvas = new OffscreenCanvas(bitmap.width, bitmap.height)
+  const ctx = canvas.getContext('2d')
+  if (!ctx) {
+    throw new Error('AVIF encoding unavailable (no 2D context)')
+  }
+  ctx.drawImage(bitmap, 0, 0)
+  const outBlob = await canvas.convertToBlob({
+    type: 'image/avif',
     quality: quality / 100,
   })
   const buffer = await outBlob.arrayBuffer()

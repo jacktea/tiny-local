@@ -45,6 +45,7 @@ const mimeByFormat: Record<string, string> = {
   jpeg: 'image/jpeg',
   jpg: 'image/jpeg',
   webp: 'image/webp',
+  avif: 'image/avif',
 }
 
 const extensionByFormat: Record<string, string> = {
@@ -52,6 +53,7 @@ const extensionByFormat: Record<string, string> = {
   jpeg: 'jpg',
   jpg: 'jpg',
   webp: 'webp',
+  avif: 'avif',
 }
 
 worker.onmessage = (event: MessageEvent<WorkerMessage>) => {
@@ -240,6 +242,7 @@ async function enqueueFiles(fileList: FileList | File[]) {
             dithering: elements.ditherInput.checked,
             progressive: elements.progressiveInput.checked,
             convertToWebp: elements.convertWebpInput.checked,
+            convertToAvif: elements.convertAvifInput?.checked ?? false,
             pngTruecolor: elements.pngTruecolorInput.checked,
             autoRotate: elements.autoRotateInput.checked,
             stripExif: elements.stripExifInput.checked,
@@ -369,6 +372,7 @@ async function reprocessCompletedFiles() {
             dithering: elements.ditherInput.checked,
             progressive: elements.progressiveInput.checked,
             convertToWebp: elements.convertWebpInput.checked,
+            convertToAvif: elements.convertAvifInput?.checked ?? false,
             pngTruecolor: elements.pngTruecolorInput.checked,
             autoRotate: elements.autoRotateInput.checked,
             stripExif: elements.stripExifInput.checked,
@@ -392,6 +396,7 @@ interface PresetConfig {
   dithering: boolean
   progressive: boolean
   convertToWebp: boolean
+  convertToAvif: boolean
   pngTruecolor: boolean
   autoRotate: boolean
   stripExif: boolean
@@ -404,6 +409,7 @@ const presets: Record<PresetMode, PresetConfig> = {
     dithering: true,
     progressive: true,
     convertToWebp: false,
+    convertToAvif: false,
     pngTruecolor: false,
     autoRotate: true,
     stripExif: true,
@@ -414,6 +420,7 @@ const presets: Record<PresetMode, PresetConfig> = {
     dithering: true,
     progressive: true,
     convertToWebp: false,
+    convertToAvif: false,
     pngTruecolor: false,
     autoRotate: true,
     stripExif: true,
@@ -428,6 +435,7 @@ const presets: Record<PresetMode, PresetConfig> = {
     dithering: true,
     progressive: true,
     convertToWebp: true,
+    convertToAvif: false,
     pngTruecolor: false,
     autoRotate: true,
     stripExif: true,
@@ -442,6 +450,7 @@ const presets: Record<PresetMode, PresetConfig> = {
     dithering: false,
     progressive: false,
     convertToWebp: false,
+    convertToAvif: false,
     pngTruecolor: false,
     autoRotate: true,
     stripExif: true,
@@ -487,6 +496,9 @@ function setupPresets() {
       elements.ditherInput.checked = config.dithering
       elements.progressiveInput.checked = config.progressive
       elements.convertWebpInput.checked = config.convertToWebp
+      if (elements.convertAvifInput) {
+        elements.convertAvifInput.checked = config.convertToAvif
+      }
       elements.pngTruecolorInput.checked = config.pngTruecolor
       elements.autoRotateInput.checked = config.autoRotate
       elements.stripExifInput.checked = config.stripExif
@@ -500,8 +512,12 @@ function setupPresets() {
       const completedCount = Array.from(state.items.values()).filter(
         (item) => item.status === 'done'
       ).length
-      if (completedCount > 0 && confirm(t().reprocessConfirm(completedCount))) {
-        void reprocessCompletedFiles()
+      if (completedCount > 0) {
+        showConfirm(t().reprocessConfirm(completedCount)).then((result) => {
+          if (result) {
+            void reprocessCompletedFiles()
+          }
+        })
       }
     }
   }
@@ -684,8 +700,12 @@ function setupControls() {
       const completedCount = Array.from(state.items.values()).filter(
         (item) => item.status === 'done'
       ).length
-      if (completedCount > 0 && confirm(t().reprocessConfirm(completedCount))) {
-        void reprocessCompletedFiles()
+      if (completedCount > 0) {
+        showConfirm(t().reprocessConfirm(completedCount)).then((result) => {
+          if (result) {
+            void reprocessCompletedFiles()
+          }
+        })
       }
     }
   }
@@ -693,6 +713,9 @@ function setupControls() {
   elements.ditherInput.addEventListener('change', handleOptionChange)
   elements.progressiveInput.addEventListener('change', handleOptionChange)
   elements.convertWebpInput.addEventListener('change', handleOptionChange)
+  if (elements.convertAvifInput) {
+    elements.convertAvifInput.addEventListener('change', handleOptionChange)
+  }
   elements.pngTruecolorInput.addEventListener('change', handleOptionChange)
   elements.autoRotateInput.addEventListener('change', handleOptionChange)
   elements.stripExifInput.addEventListener('change', handleOptionChange)
@@ -1138,10 +1161,81 @@ function setupTheme() {
   }
 }
 
+// 自定义确认对话框
+function setupConfirmDialog() {
+  const dialog = document.getElementById('confirmDialog') as HTMLElement
+  const titleEl = document.getElementById('confirmTitle') as HTMLElement
+  const messageEl = document.getElementById('confirmMessage') as HTMLElement
+  const okBtn = document.getElementById('confirmOk') as HTMLButtonElement
+  const cancelBtn = document.getElementById('confirmCancel') as HTMLButtonElement
+
+  let currentResolve: ((value: boolean) => void) | null = null
+
+  const show = (message: string, title?: string): Promise<boolean> => {
+    return new Promise((resolve) => {
+      currentResolve = resolve
+      messageEl.textContent = message
+      if (title) {
+        titleEl.textContent = title
+      } else {
+        titleEl.textContent = t().confirmTitle
+      }
+      dialog.classList.add('active')
+    })
+  }
+
+  const hide = (result: boolean) => {
+    dialog.classList.remove('active')
+    if (currentResolve) {
+      currentResolve(result)
+      currentResolve = null
+    }
+  }
+
+  okBtn.addEventListener('click', () => hide(true))
+  cancelBtn.addEventListener('click', () => hide(false))
+
+  // ESC 键关闭，返回 false
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && dialog.classList.contains('active')) {
+      hide(false)
+    }
+  })
+
+  // 点击背景关闭，返回 false
+  dialog.addEventListener('click', (e) => {
+    if (e.target === dialog) {
+      hide(false)
+    }
+  })
+
+  return show
+}
+
+const showConfirm = setupConfirmDialog()
+
+// 格式转换选项互斥逻辑
+function setupFormatConversionMutualExclusion() {
+  if (!elements.convertAvifInput) return
+
+  elements.convertWebpInput.addEventListener('change', () => {
+    if (elements.convertWebpInput.checked && elements.convertAvifInput.checked) {
+      elements.convertAvifInput.checked = false
+    }
+  })
+
+  elements.convertAvifInput.addEventListener('change', () => {
+    if (elements.convertAvifInput.checked && elements.convertWebpInput.checked) {
+      elements.convertWebpInput.checked = false
+    }
+  })
+}
+
 setupDragAndDrop()
 setupPresets()
 setupCompressionMode()
 setupResize()
+setupFormatConversionMutualExclusion()
 setupControls()
 setupServiceWorker()
 setupI18n()

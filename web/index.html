@@ -65,7 +65,7 @@
           <input
             id="fileInput"
             type="file"
-            accept="image/png,image/jpeg,image/webp"
+            accept="image/png,image/jpeg,image/webp,image/avif"
             multiple
           />
           <div>
@@ -144,6 +144,10 @@
             <label class="toggle">
               <input id="convertWebpInput" type="checkbox" />
               <span data-i18n="convertPNGToWebP">Convert PNG to WebP</span>
+            </label>
+            <label class="toggle">
+              <input id="convertAvifInput" type="checkbox" />
+              <span data-i18n="convertToAvif">Convert to AVIF</span>
             </label>
             <label class="toggle">
               <input id="pngTruecolorInput" type="checkbox" />
@@ -253,6 +257,22 @@
         </div>
         <div class="preview-modal-footer">
           <span id="previewStats"></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 自定义确认对话框 -->
+    <div id="confirmDialog" class="confirm-dialog">
+      <div class="confirm-dialog-content">
+        <div class="confirm-dialog-header">
+          <h3 id="confirmTitle" data-i18n="confirmTitle">Confirm</h3>
+        </div>
+        <div class="confirm-dialog-body">
+          <p id="confirmMessage"></p>
+        </div>
+        <div class="confirm-dialog-footer">
+          <button id="confirmCancel" class="ghost" data-i18n="cancel">Cancel</button>
+          <button id="confirmOk" class="primary" data-i18n="confirm">Confirm</button>
         </div>
       </div>
     </div>

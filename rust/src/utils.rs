@@ -3,6 +3,7 @@ pub enum InputFormat {
     Png,
     Jpeg,
     Webp,
+    Avif,
 }
 
 impl InputFormat {
@@ -11,6 +12,7 @@ impl InputFormat {
             "png" => Some(InputFormat::Png),
             "jpeg" | "jpg" => Some(InputFormat::Jpeg),
             "webp" => Some(InputFormat::Webp),
+            "avif" => Some(InputFormat::Avif),
             _ => None,
         }
     }
@@ -39,6 +41,14 @@ pub fn detect_format(bytes: &[u8]) -> Option<&'static str> {
         && &bytes[8..12] == b"WEBP"
     {
         return Some("webp");
+    }
+
+    // AVIF 文件类型检测 (ftypavif / ftypavis)
+    if bytes.len() >= 28
+        && &bytes[4..8] == b"ftyp"
+        && (&bytes[8..12] == b"avif" || &bytes[8..12] == b"avis")
+    {
+        return Some("avif");
     }
 
     None

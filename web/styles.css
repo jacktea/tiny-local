@@ -904,3 +904,90 @@ button:disabled {
     padding: 16px;
   }
 }
+
+/* 自定义确认对话框 */
+.confirm-dialog {
+  position: fixed;
+  inset: 0;
+  background: rgba(10, 15, 31, 0.5);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1100;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.2s ease, visibility 0.2s ease;
+}
+
+.confirm-dialog.active {
+  opacity: 1;
+  visibility: visible;
+}
+
+.confirm-dialog-content {
+  background: var(--card);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  border: 1px solid rgba(10, 15, 31, 0.1);
+  max-width: 420px;
+  width: 90vw;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transform: scale(0.95);
+  transition: transform 0.2s ease;
+}
+
+.confirm-dialog.active .confirm-dialog-content {
+  transform: scale(1);
+}
+
+.confirm-dialog-header {
+  padding: 20px 24px 12px;
+}
+
+.confirm-dialog-header h3 {
+  margin: 0;
+  font-size: 1.2rem;
+  color: var(--ink);
+}
+
+.confirm-dialog-body {
+  padding: 12px 24px 20px;
+}
+
+.confirm-dialog-body p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.confirm-dialog-footer {
+  padding: 16px 24px;
+  background: rgba(10, 15, 31, 0.02);
+  border-top: 1px solid rgba(10, 15, 31, 0.08);
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+.confirm-dialog-footer .ghost {
+  min-width: 80px;
+}
+
+.confirm-dialog-footer .primary {
+  min-width: 80px;
+}
+
+@media (prefers-color-scheme: dark) {
+  .confirm-dialog-footer {
+    background: rgba(255, 255, 255, 0.03);
+    border-top-color: rgba(255, 255, 255, 0.08);
+  }
+}
+
+[data-theme="dark"] .confirm-dialog-footer {
+  background: rgba(255, 255, 255, 0.03);
+  border-top-color: rgba(255, 255, 255, 0.08);
+}
