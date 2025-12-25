@@ -240,6 +240,7 @@ async function enqueueFiles(fileList: FileList | File[]) {
             dithering: elements.ditherInput.checked,
             progressive: elements.progressiveInput.checked,
             convertToWebp: elements.convertWebpInput.checked,
+            pngTruecolor: elements.pngTruecolorInput.checked,
             autoRotate: elements.autoRotateInput.checked,
             stripExif: elements.stripExifInput.checked,
             targetSize: currentCompressionMode === 'targetSize' ? getTargetSizeBytes() : undefined,
@@ -368,6 +369,7 @@ async function reprocessCompletedFiles() {
             dithering: elements.ditherInput.checked,
             progressive: elements.progressiveInput.checked,
             convertToWebp: elements.convertWebpInput.checked,
+            pngTruecolor: elements.pngTruecolorInput.checked,
             autoRotate: elements.autoRotateInput.checked,
             stripExif: elements.stripExifInput.checked,
             resizeMode: elements.resizeEnabled.checked ? elements.resizeMode.value : undefined,
@@ -390,6 +392,7 @@ interface PresetConfig {
   dithering: boolean
   progressive: boolean
   convertToWebp: boolean
+  pngTruecolor: boolean
   autoRotate: boolean
   stripExif: boolean
   getDescription: () => string
@@ -401,6 +404,7 @@ const presets: Record<PresetMode, PresetConfig> = {
     dithering: true,
     progressive: true,
     convertToWebp: false,
+    pngTruecolor: false,
     autoRotate: true,
     stripExif: true,
     getDescription: () => '',
@@ -410,6 +414,7 @@ const presets: Record<PresetMode, PresetConfig> = {
     dithering: true,
     progressive: true,
     convertToWebp: false,
+    pngTruecolor: false,
     autoRotate: true,
     stripExif: true,
     getDescription: () => {
@@ -423,6 +428,7 @@ const presets: Record<PresetMode, PresetConfig> = {
     dithering: true,
     progressive: true,
     convertToWebp: true,
+    pngTruecolor: false,
     autoRotate: true,
     stripExif: true,
     getDescription: () => {
@@ -436,6 +442,7 @@ const presets: Record<PresetMode, PresetConfig> = {
     dithering: false,
     progressive: false,
     convertToWebp: false,
+    pngTruecolor: false,
     autoRotate: true,
     stripExif: true,
     getDescription: () => {
@@ -480,6 +487,7 @@ function setupPresets() {
       elements.ditherInput.checked = config.dithering
       elements.progressiveInput.checked = config.progressive
       elements.convertWebpInput.checked = config.convertToWebp
+      elements.pngTruecolorInput.checked = config.pngTruecolor
       elements.autoRotateInput.checked = config.autoRotate
       elements.stripExifInput.checked = config.stripExif
     }
@@ -685,6 +693,7 @@ function setupControls() {
   elements.ditherInput.addEventListener('change', handleOptionChange)
   elements.progressiveInput.addEventListener('change', handleOptionChange)
   elements.convertWebpInput.addEventListener('change', handleOptionChange)
+  elements.pngTruecolorInput.addEventListener('change', handleOptionChange)
   elements.autoRotateInput.addEventListener('change', handleOptionChange)
   elements.stripExifInput.addEventListener('change', handleOptionChange)
   // quality 滑块在拖动时也会触发，所以只在值改变时提示

@@ -30,6 +30,8 @@ struct CompressOptions {
     // EXIF处理选项
     auto_rotate: Option<bool>,    // 自动旋转（根据EXIF方向）
     strip_exif: Option<bool>,     // 清除EXIF元数据
+    // PNG 选项
+    png_truecolor: Option<bool>, // 保留真彩（不做调色板量化）
 }
 
 #[wasm_bindgen]
@@ -50,6 +52,7 @@ pub fn compress_image(
     let resize_value = opts.resize_value.unwrap_or(100);
     let auto_rotate = opts.auto_rotate.unwrap_or(true);
     let strip_exif = opts.strip_exif.unwrap_or(true);
+    let png_truecolor = opts.png_truecolor.unwrap_or(false);
 
     match format {
         InputFormat::Png => png::compress_png(
@@ -59,6 +62,7 @@ pub fn compress_image(
             resize_mode,
             resize_value,
             auto_rotate,
+            png_truecolor,
         )
         .map_err(map_err),
         InputFormat::Jpeg => jpeg::compress_jpeg(

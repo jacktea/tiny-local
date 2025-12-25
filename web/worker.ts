@@ -10,6 +10,7 @@ type QueueItem = {
   dithering: boolean
   progressive: boolean
   convertToWebp: boolean
+  pngTruecolor: boolean
   autoRotate: boolean
   stripExif: boolean
   targetSize?: number // 目标文件大小（字节）
@@ -87,6 +88,7 @@ async function processQueue() {
           job.progressive,
           job.resizeMode,
           job.resizeValue,
+          job.pngTruecolor,
           job.autoRotate,
           job.stripExif
         )
@@ -99,6 +101,7 @@ async function processQueue() {
             progressive: job.progressive,
             resize_mode: job.resizeMode || 'none',
             resize_value: job.resizeValue || 100,
+            png_truecolor: job.pngTruecolor,
             auto_rotate: job.autoRotate,
             strip_exif: job.stripExif,
           })
@@ -137,6 +140,7 @@ async function findQualityForTargetSize(
   progressive: boolean,
   resizeMode?: string,
   resizeValue?: number,
+  pngTruecolor?: boolean,
   autoRotate?: boolean,
   stripExif?: boolean
 ): Promise<{ output: Uint8Array; quality: number }> {
@@ -151,6 +155,7 @@ async function findQualityForTargetSize(
         progressive,
         resize_mode: resizeMode || 'none',
         resize_value: resizeValue || 100,
+        png_truecolor: pngTruecolor,
         auto_rotate: autoRotate,
         strip_exif: stripExif,
       })

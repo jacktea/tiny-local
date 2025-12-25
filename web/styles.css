@@ -48,6 +48,63 @@
   box-sizing: border-box;
 }
 
+/* 全局滚动条样式 - Firefox */
+html {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(10, 15, 31, 0.2) transparent;
+}
+
+/* 全局滚动条样式 - WebKit 浏览器 */
+html::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+html::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+html::-webkit-scrollbar-thumb {
+  background: rgba(10, 15, 31, 0.2);
+  border-radius: 5px;
+  transition: background 0.2s ease;
+}
+
+html::-webkit-scrollbar-thumb:hover {
+  background: rgba(10, 15, 31, 0.35);
+}
+
+html::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* 深色模式下的全局滚动条 */
+:root[data-theme="dark"] html {
+  scrollbar-color: rgba(230, 237, 243, 0.2) transparent;
+}
+
+:root[data-theme="dark"] html::-webkit-scrollbar-thumb {
+  background: rgba(230, 237, 243, 0.2);
+}
+
+:root[data-theme="dark"] html::-webkit-scrollbar-thumb:hover {
+  background: rgba(230, 237, 243, 0.35);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) html {
+    scrollbar-color: rgba(230, 237, 243, 0.2) transparent;
+  }
+
+  :root:not([data-theme="light"]) html::-webkit-scrollbar-thumb {
+    background: rgba(230, 237, 243, 0.2);
+  }
+
+  :root:not([data-theme="light"]) html::-webkit-scrollbar-thumb:hover {
+    background: rgba(230, 237, 243, 0.35);
+  }
+}
+
 body {
   margin: 0;
   color: var(--ink);
@@ -60,7 +117,7 @@ body {
 .page {
   max-width: 1100px;
   margin: 0 auto;
-  padding: 48px 24px 64px;
+  padding: 24px 24px 12px 24px;
   display: flex;
   flex-direction: column;
   gap: 32px;
@@ -129,6 +186,7 @@ h1 {
   display: grid;
   grid-template-columns: minmax(240px, 1.1fr) minmax(260px, 0.9fr);
   gap: 24px;
+  align-items: start;
 }
 
 .dropzone {
@@ -142,6 +200,7 @@ h1 {
   cursor: pointer;
   position: relative;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
+  height: 100%;
 }
 
 .dropzone input {
@@ -161,9 +220,72 @@ h1 {
   border-radius: var(--radius);
   padding: 24px;
   box-shadow: var(--shadow);
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto auto;
+  gap: 20px;
+  max-height: calc(100vh - 420px);
+  position: sticky;
+  top: 24px;
+}
+
+.control-panel-scroll {
   display: flex;
   flex-direction: column;
   gap: 20px;
+  overflow: auto;
+  padding-right: 6px;
+  margin-right: -6px;
+  scrollbar-gutter: stable;
+  /* Firefox 滚动条样式 */
+  scrollbar-width: thin;
+  scrollbar-color: rgba(10, 15, 31, 0.2) transparent;
+}
+
+/* WebKit 浏览器滚动条样式 */
+.control-panel-scroll::-webkit-scrollbar {
+  width: 8px;
+}
+
+.control-panel-scroll::-webkit-scrollbar-track {
+  background: transparent;
+  border-radius: 4px;
+}
+
+.control-panel-scroll::-webkit-scrollbar-thumb {
+  background: rgba(10, 15, 31, 0.2);
+  border-radius: 4px;
+  transition: background 0.2s ease;
+}
+
+.control-panel-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(10, 15, 31, 0.35);
+}
+
+/* 深色模式下的滚动条 */
+:root[data-theme="dark"] .control-panel-scroll {
+  scrollbar-color: rgba(230, 237, 243, 0.2) transparent;
+}
+
+:root[data-theme="dark"] .control-panel-scroll::-webkit-scrollbar-thumb {
+  background: rgba(230, 237, 243, 0.2);
+}
+
+:root[data-theme="dark"] .control-panel-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(230, 237, 243, 0.35);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .control-panel-scroll {
+    scrollbar-color: rgba(230, 237, 243, 0.2) transparent;
+  }
+
+  :root:not([data-theme="light"]) .control-panel-scroll::-webkit-scrollbar-thumb {
+    background: rgba(230, 237, 243, 0.2);
+  }
+
+  :root:not([data-theme="light"]) .control-panel-scroll::-webkit-scrollbar-thumb:hover {
+    background: rgba(230, 237, 243, 0.35);
+  }
 }
 
 /* 预设模式 */
@@ -383,6 +505,10 @@ h1 {
 .actions {
   display: flex;
   gap: 12px;
+  position: sticky;
+  bottom: 0;
+  background: var(--card);
+  padding-top: 8px;
 }
 
 button {
@@ -528,6 +654,17 @@ button:disabled {
 @media (max-width: 900px) {
   .controls {
     grid-template-columns: 1fr;
+  }
+
+  .control-panel {
+    max-height: none;
+    position: static;
+  }
+
+  .control-panel-scroll {
+    overflow: visible;
+    padding-right: 0;
+    margin-right: 0;
   }
 
   .preset-buttons {

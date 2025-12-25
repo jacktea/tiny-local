@@ -20,6 +20,7 @@ export const elements = {
   ditherInput: document.querySelector('#ditherInput') as HTMLInputElement,
   progressiveInput: document.querySelector('#progressiveInput') as HTMLInputElement,
   convertWebpInput: document.querySelector('#convertWebpInput') as HTMLInputElement,
+  pngTruecolorInput: document.querySelector('#pngTruecolorInput') as HTMLInputElement,
   autoRotateInput: document.querySelector('#autoRotateInput') as HTMLInputElement,
   stripExifInput: document.querySelector('#stripExifInput') as HTMLInputElement,
   targetSizeInput: document.querySelector('#targetSizeInput') as HTMLInputElement,

@@ -49,6 +49,7 @@ interface Translations {
   ditherPNGs: string
   progressiveJPEG: string
   convertPNGToWebP: string
+  pngTruecolor: string
   autoRotate: string
   stripExif: string
   downloadAll: string
@@ -138,6 +139,7 @@ const translations: Record<Language, Translations> = {
     ditherPNGs: 'Dither PNGs',
     progressiveJPEG: 'Progressive JPEG',
     convertPNGToWebP: 'Convert PNG to WebP',
+    pngTruecolor: 'Keep PNG truecolor',
     autoRotate: 'Auto-rotate (EXIF)',
     stripExif: 'Remove EXIF metadata',
     downloadAll: 'Download all',
@@ -214,6 +216,7 @@ const translations: Record<Language, Translations> = {
     ditherPNGs: 'PNG 抖动',
     progressiveJPEG: '渐进式 JPEG',
     convertPNGToWebP: '将 PNG 转换为 WebP',
+    pngTruecolor: '保留 PNG 真彩',
     autoRotate: 'EXIF 自动旋转',
     stripExif: '清除 EXIF 元数据',
     downloadAll: '全部下载',
