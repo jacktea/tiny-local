@@ -44,6 +44,7 @@ pub fn compress_png(
     resize_mode: &str,
     resize_value: u32,
     _auto_rotate: bool, // PNG 通常不包含 EXIF，保留参数以统一接口
+    png_truecolor: bool,
 ) -> Result<Vec<u8>, CompressorError> {
     let image = image::load_from_memory(data)?;
     let image = apply_resize(image, resize_mode, resize_value);
@@ -51,9 +52,21 @@ pub fn compress_png(
     let rgba = image.to_rgba8();
     let (width, height) = rgba.dimensions();
 
+    if png_truecolor {
+        let mut out = Vec::new();
+        {
+            let mut encoder = png::Encoder::new(&mut out, width, height);
+            encoder.set_color(png::ColorType::Rgba);
+            encoder.set_depth(png::BitDepth::Eight);
+            let mut writer = encoder.write_header()?;
+            writer.write_image_data(rgba.as_raw())?;
+        }
+        return Ok(out);
+    }
+
     let mut attr = imagequant::new();
     let max_quality = quality;
-    let min_quality = max_quality.saturating_sub(10);
+    let min_quality = max_quality.saturating_sub(20);
     attr.set_quality(min_quality, max_quality)
         .map_err(|err| CompressorError::EncodeError(err.to_string()))?;
     attr.set_speed(3)

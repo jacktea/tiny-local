@@ -76,16 +76,17 @@
 
         <div class="control-panel">
           <!-- 预设模式 -->
-          <div class="preset-container">
-            <label data-i18n="presetMode">Preset Mode</label>
-            <div class="preset-buttons">
-              <button type="button" class="preset-btn active" data-preset="custom" data-i18n="presetCustom">Custom</button>
-              <button type="button" class="preset-btn" data-preset="social" data-i18n="presetSocial">Social</button>
-              <button type="button" class="preset-btn" data-preset="web" data-i18n="presetWeb">Web</button>
-              <button type="button" class="preset-btn" data-preset="archive" data-i18n="presetArchive">Archive</button>
+          <div class="control-panel-scroll">
+            <div class="preset-container">
+              <label data-i18n="presetMode">Preset Mode</label>
+              <div class="preset-buttons">
+                <button type="button" class="preset-btn active" data-preset="custom" data-i18n="presetCustom">Custom</button>
+                <button type="button" class="preset-btn" data-preset="social" data-i18n="presetSocial">Social</button>
+                <button type="button" class="preset-btn" data-preset="web" data-i18n="presetWeb">Web</button>
+                <button type="button" class="preset-btn" data-preset="archive" data-i18n="presetArchive">Archive</button>
+              </div>
+              <p class="preset-description" id="presetDescription"></p>
             </div>
-            <p class="preset-description" id="presetDescription"></p>
-          </div>
 
           <!-- 压缩模式选择 -->
           <div class="mode-selector">
@@ -145,6 +146,10 @@
               <span data-i18n="convertPNGToWebP">Convert PNG to WebP</span>
             </label>
             <label class="toggle">
+              <input id="pngTruecolorInput" type="checkbox" />
+              <span data-i18n="pngTruecolor">Keep PNG truecolor</span>
+            </label>
+            <label class="toggle">
               <input id="autoRotateInput" type="checkbox" checked />
               <span data-i18n="autoRotate">Auto-rotate (EXIF)</span>
             </label>
@@ -177,6 +182,7 @@
               />
               <span class="resize-unit" id="resizeUnit">%</span>
             </div>
+          </div>
           </div>
 
           <div class="actions">
