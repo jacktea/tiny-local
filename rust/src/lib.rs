@@ -1,5 +1,6 @@
 use wasm_bindgen::prelude::*;
 
+mod avif;
 mod errors;
 mod exif;
 mod jpeg;
@@ -84,6 +85,11 @@ pub fn compress_image(
             {
                 Err(map_err(CompressorError::WebpNotEnabled))
             }
+        }
+        InputFormat::Avif => {
+            // AVIF 编码通过浏览器 Canvas API 实现
+            // 这里返回一个占位符，实际编码在 worker 的 fallback 中处理
+            avif::compress_avif(data, quality).map_err(map_err)
         }
     }
 }

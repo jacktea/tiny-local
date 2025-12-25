@@ -20,6 +20,7 @@ export const elements = {
   ditherInput: document.querySelector('#ditherInput') as HTMLInputElement,
   progressiveInput: document.querySelector('#progressiveInput') as HTMLInputElement,
   convertWebpInput: document.querySelector('#convertWebpInput') as HTMLInputElement,
+  convertAvifInput: document.querySelector('#convertAvifInput') as HTMLInputElement,
   pngTruecolorInput: document.querySelector('#pngTruecolorInput') as HTMLInputElement,
   autoRotateInput: document.querySelector('#autoRotateInput') as HTMLInputElement,
   stripExifInput: document.querySelector('#stripExifInput') as HTMLInputElement,
@@ -175,6 +176,7 @@ export function getMimeTypeFromFileName(fileName: string): string {
     jpg: 'image/jpeg',
     jpeg: 'image/jpeg',
     webp: 'image/webp',
+    avif: 'image/avif',
   };
   return mimeTypes[ext || ''] || 'image/png';
 }
