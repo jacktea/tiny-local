@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-WASI_SDK_VERSION="${WASI_SDK_VERSION:-22}"
+WASI_SDK_VERSION="${WASI_SDK_VERSION:-29}"
 WASI_SDK_DIR_DEFAULT="$(pwd)/tools/wasi-sdk-${WASI_SDK_VERSION}"
 
 detect_wasi_sdk() {
@@ -18,11 +18,26 @@ detect_wasi_sdk() {
 }
 
 download_wasi_sdk() {
-  local os archive_url archive_name
+  local os arch archive_url archive_name extracted_dir
   os="$(uname -s | tr '[:upper:]' '[:lower:]')"
+  arch="$(uname -m | tr '[:upper:]' '[:lower:]')"
+  case "${arch}" in
+    arm64|aarch64) arch="arm64" ;;
+    x86_64|amd64) arch="x86_64" ;;
+    *)
+      echo "Unsupported CPU architecture for WASI SDK download: ${arch}" >&2
+      return 1
+      ;;
+  esac
   case "${os}" in
-    darwin) archive_name="wasi-sdk-${WASI_SDK_VERSION}.0-macos.tar.gz" ;;
-    linux) archive_name="wasi-sdk-${WASI_SDK_VERSION}.0-linux.tar.gz" ;;
+    darwin)
+      archive_name="wasi-sdk-${WASI_SDK_VERSION}.0-${arch}-macos.tar.gz"
+      extracted_dir="wasi-sdk-${WASI_SDK_VERSION}.0-${arch}-macos"
+      ;;
+    linux)
+      archive_name="wasi-sdk-${WASI_SDK_VERSION}.0-${arch}-linux.tar.gz"
+      extracted_dir="wasi-sdk-${WASI_SDK_VERSION}.0-${arch}-linux"
+      ;;
     *)
       echo "Unsupported OS for automatic WASI SDK download: ${os}" >&2
       return 1
@@ -46,7 +61,9 @@ download_wasi_sdk() {
   tar -xzf "${archive_name}"
   rm -f "${archive_name}"
 
-  if [[ -d "wasi-sdk-${WASI_SDK_VERSION}.0" ]]; then
+  if [[ -n "${extracted_dir}" && -d "${extracted_dir}" ]]; then
+    mv "${extracted_dir}" "${WASI_SDK_DIR_DEFAULT}"
+  elif [[ -d "wasi-sdk-${WASI_SDK_VERSION}.0" ]]; then
     mv "wasi-sdk-${WASI_SDK_VERSION}.0" "${WASI_SDK_DIR_DEFAULT}"
   fi
 

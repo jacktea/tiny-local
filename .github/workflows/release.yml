@@ -43,6 +43,9 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
+      - name: Set WASI SDK version
+        run: echo "WASI_SDK_VERSION=29" >> "$GITHUB_ENV"
+
       - name: Build
         run: pnpm run build
 
