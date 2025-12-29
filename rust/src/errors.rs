@@ -29,6 +29,6 @@ impl From<png::EncodingError> for CompressorError {
 #[cfg(feature = "webp")]
 impl From<webp::WebPEncodingError> for CompressorError {
     fn from(err: webp::WebPEncodingError) -> Self {
-        CompressorError::EncodeError(err.to_string())
+        CompressorError::EncodeError(format!("{err:?}"))
     }
 }

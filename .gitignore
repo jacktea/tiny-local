@@ -10,3 +10,4 @@ rust/target/
 rust/web
 rust/Cargo.lock
 pnpm-lock.yaml
+tools
