@@ -1,5 +1,9 @@
 /// <reference lib="webworker" />
-import init, { compress_image, detect_format, get_version } from './pkg/tinylocal.js'
+import init, {
+  compress_image,
+  detect_format,
+  get_version,
+} from './pkg/tinylocal.js'
 import wasmUrl from './pkg/tinylocal_bg.wasm?url'
 
 type QueueItem = {
@@ -70,7 +74,10 @@ async function processQueue() {
       }
 
       let outputFormat = detected
-      if (job.convertToAvif && (detected === 'png' || detected === 'jpeg' || detected === 'webp')) {
+      if (
+        job.convertToAvif &&
+        (detected === 'png' || detected === 'jpeg' || detected === 'webp')
+      ) {
         outputFormat = 'avif'
       } else if (job.convertToWebp && detected === 'png') {
         outputFormat = 'webp'
@@ -127,7 +134,13 @@ async function processQueue() {
       }
 
       self.postMessage(
-        { type: 'completed', id: job.id, output, outputFormat, quality: finalQuality },
+        {
+          type: 'completed',
+          id: job.id,
+          output,
+          outputFormat,
+          quality: finalQuality,
+        },
         [output.buffer as ArrayBuffer]
       )
     } catch (error) {
@@ -225,7 +238,9 @@ async function findQualityForTargetSize(
 
   const lowDiff = Math.abs(lowOutput.length - targetSize)
   const highDiff = Math.abs(highOutput.length - targetSize)
-  const bestDiff = bestOutput ? Math.abs(bestOutput.length - targetSize) : Infinity
+  const bestDiff = bestOutput
+    ? Math.abs(bestOutput.length - targetSize)
+    : Infinity
 
   if (lowDiff <= highDiff && lowDiff <= bestDiff) {
     return { output: lowOutput, quality: low }
@@ -242,24 +257,43 @@ async function encodeWebpFallback(
   data: Uint8Array,
   quality: number
 ): Promise<Uint8Array> {
-  if (!('OffscreenCanvas' in self)) {
-    throw new Error('WebP encoding not supported in this browser')
+  // 检查是否在支持浏览器 API 的环境中（排除 Cloudflare Workers 等环境）
+  if (
+    !('OffscreenCanvas' in self) ||
+    typeof createImageBitmap === 'undefined'
+  ) {
+    throw new Error(
+      'WebP encoding not available: OffscreenCanvas or createImageBitmap not supported in this environment. ' +
+        'Please build WASM with WebP feature enabled: wasm-pack build rust --target web --out-dir web/pkg --release -- --features webp'
+    )
   }
 
-  const blob = new Blob([data.buffer as ArrayBuffer])
-  const bitmap = await createImageBitmap(blob)
-  const canvas = new OffscreenCanvas(bitmap.width, bitmap.height)
-  const ctx = canvas.getContext('2d')
-  if (!ctx) {
-    throw new Error('WebP encoding unavailable (no 2D context)')
+  try {
+    const blob = new Blob([data.buffer as ArrayBuffer])
+    const bitmap = await createImageBitmap(blob)
+    const canvas = new OffscreenCanvas(bitmap.width, bitmap.height)
+    const ctx = canvas.getContext('2d')
+    if (!ctx) {
+      throw new Error('WebP encoding unavailable (no 2D context)')
+    }
+    ctx.drawImage(bitmap, 0, 0)
+    const outBlob = await canvas.convertToBlob({
+      type: 'image/webp',
+      quality: quality / 100,
+    })
+    const buffer = await outBlob.arrayBuffer()
+    return new Uint8Array(buffer)
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error)
+    // 如果是在 Workers 环境中，提供更明确的错误信息
+    if (message.includes('native code') || message.includes('not a function')) {
+      throw new Error(
+        'WebP encoding failed: Browser APIs not available in Cloudflare Workers environment. ' +
+          'Please build WASM with WebP feature enabled: wasm-pack build rust --target web --out-dir web/pkg --release -- --features webp'
+      )
+    }
+    throw error
   }
-  ctx.drawImage(bitmap, 0, 0)
-  const outBlob = await canvas.convertToBlob({
-    type: 'image/webp',
-    quality: quality / 100,
-  })
-  const buffer = await outBlob.arrayBuffer()
-  return new Uint8Array(buffer)
 }
 
 async function encodeAvifFallback(

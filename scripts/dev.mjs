@@ -8,10 +8,20 @@ const pkgPath = path.join(root, 'web', 'pkg', 'tinylocal.js');
 
 if (!existsSync(pkgPath)) {
   console.log('[dev] wasm pkg missing. Building with wasm-pack...');
-  execSync('wasm-pack build rust --target web --out-dir web/pkg --release', {
-    stdio: 'inherit',
-    cwd: root,
-  });
+  if (process.platform === 'win32') {
+    execSync(
+      'wasm-pack build rust --target web --out-dir web/pkg --release --no-opt --features avif,webp',
+      {
+        stdio: 'inherit',
+        cwd: root,
+      },
+    );
+  } else {
+    execSync('bash scripts/wasm-build.sh', {
+      stdio: 'inherit',
+      cwd: root,
+    });
+  }
 }
 
 const viteBin = process.platform === 'win32' ? 'vite.cmd' : 'vite';

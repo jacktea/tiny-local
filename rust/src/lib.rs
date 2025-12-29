@@ -6,6 +6,8 @@ mod exif;
 mod jpeg;
 mod png;
 mod utils;
+#[cfg(target_arch = "wasm32")]
+mod c_compat;
 
 #[cfg(feature = "webp")]
 mod webp;

@@ -48,6 +48,8 @@ npm run build
 
 输出文件生成在 `dist/` 目录，可直接用于静态托管（Vercel、Cloudflare Pages、GitHub Pages 等）。
 
+**注意**：构建脚本已自动启用 WebP 和 AVIF 功能，确保在 Cloudflare Workers 等不支持浏览器 Canvas API 的环境中也能正常工作。
+
 ## Cloudflare Workers 部署
 
 ### 前置要求
@@ -105,13 +107,19 @@ npm run build
 
 5. **部署到 Cloudflare Workers**
 
-   确保已完成生产构建，然后运行：
+   确保已完成生产构建（构建脚本已自动启用 WebP 功能），然后运行：
 
    ```bash
    wrangler deploy
    ```
 
    部署成功后，您将获得一个类似 `https://your-worker-name.your-subdomain.workers.dev` 的 URL。
+
+   **重要提示**：如果遇到 PNG 转 WebP 失败的错误（如 `function 1241() { [native code] }`），请确保：
+
+   - 使用 `npm run build` 构建（已自动启用 WebP 功能）
+   - 不要手动构建 WASM 时遗漏 `--features webp` 参数
+   - Cloudflare Workers 环境不支持浏览器 Canvas API，必须使用 WASM 的 WebP 功能
 
 ### 自定义域名（可选）
 
